@@ -25,11 +25,8 @@ import java.time.LocalDateTime;
 
 /**
  * <p>
- * 支付订单 服务实现类
+ * 支付订单服务实现类，负责支付单的创建、幂等性校验、余额支付及支付状态更新等核心业务逻辑
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-16
  */
 @Service
 @RequiredArgsConstructor
@@ -41,6 +38,15 @@ public class PayOrderServiceImpl extends ServiceImpl<PayOrderMapper, PayOrder> i
 
     private final RabbitTemplate rabbitTemplate;
 
+    /**
+     * <p>
+     * 申请支付单，包含幂等性校验：若已存在且已支付则抛异常，若渠道不一致则重建
+     * </p>
+     *
+     * @param applyDTO 支付申请信息，包含业务订单号和支付渠道
+     * @return 支付单ID
+     * @throws BizIllegalException 当订单已支付或已关闭时抛出
+     */
     @Override
     public String applyPayOrder(PayApplyDTO applyDTO) {
         // 1.幂等性校验
@@ -49,6 +55,14 @@ public class PayOrderServiceImpl extends ServiceImpl<PayOrderMapper, PayOrder> i
         return payOrder.getId().toString();
     }
 
+    /**
+     * <p>
+     * 尝试使用用户余额支付，先校验支付单状态，再扣减余额，最后更新支付单状态并发送消息通知交易服务
+     * </p>
+     *
+     * @param payOrderFormDTO 支付表单数据，包含支付单ID和支付密码
+     * @throws BizIllegalException 当支付单状态异常或余额不足时抛出
+     */
     @Override
     @GlobalTransactional
     public void tryPayOrderByBalance(PayOrderFormDTO payOrderFormDTO) {
@@ -77,6 +91,15 @@ public class PayOrderServiceImpl extends ServiceImpl<PayOrderMapper, PayOrder> i
         }
     }
 
+    /**
+     * <p>
+     * 标记支付单为支付成功，使用乐观锁确保状态一致性
+     * </p>
+     *
+     * @param id 支付单ID
+     * @param successTime 支付成功时间
+     * @return true表示更新成功，false表示更新失败（状态已变更）
+     */
     public boolean markPayOrderSuccess(Long id, LocalDateTime successTime) {
         return lambdaUpdate()
                 .set(PayOrder::getStatus, PayStatus.TRADE_SUCCESS.getValue())
@@ -132,6 +155,14 @@ public class PayOrderServiceImpl extends ServiceImpl<PayOrderMapper, PayOrder> i
         payOrder.setBizUserId(UserContext.getUser());
         return payOrder;
     }
+    /**
+     * <p>
+     * 根据业务订单号查询支付单
+     * </p>
+     *
+     * @param bizOrderNo 业务订单号
+     * @return 支付单实体，如果不存在则返回null
+     */
     public PayOrder queryByBizOrderNo(Long bizOrderNo) {
         return lambdaQuery()
                 .eq(PayOrder::getBizOrderNo, bizOrderNo)

@@ -14,6 +14,11 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * <p>
+ * 订单延迟消息监听器，在订单创建延迟后检查支付状态，若已支付则标记成功，否则取消订单
+ * </p>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,6 +27,13 @@ public class OrderDelayMessageListener {
     private final IOrderService orderService;
     private final PayClient payClient;
 
+    /**
+     * <p>
+     * 监听订单延迟消息，通过查询支付微服务确认支付状态后决定标记支付成功或取消订单
+     * </p>
+     *
+     * @param orderId 订单ID
+     */
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = TradeMqConstants.DELAY_ORDER_QUEUE, durable = "true"),
             exchange = @Exchange(value = TradeMqConstants.DELAY_EXCHANGE, type = "x-delayed-message",

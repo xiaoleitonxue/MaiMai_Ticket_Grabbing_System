@@ -10,36 +10,57 @@ import java.util.List;
 
 /**
  * <p>
- *  服务类
+ * 订单服务接口，提供订单的创建、支付标记、取消及查询等核心业务操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface IOrderService extends IService<Order> {
 
+    /**
+     * <p>
+     * 创建订单，包含商品校验、价格计算、订单保存、购物车清理及库存扣减等完整流程
+     * </p>
+     *
+     * @param orderFormDTO 订单表单数据，包含订单明细和支付方式
+     * @return 新创建的订单ID
+     */
     Long createOrder(OrderFormDTO orderFormDTO);
 
+    /**
+     * <p>
+     * 标记订单为已支付状态，更新支付时间
+     * </p>
+     *
+     * @param orderId 订单ID
+     */
     void markOrderPaySuccess(Long orderId);
 
     /**
-     * 取消订单
-     * @param orderId 订单id
+     * <p>
+     * 取消订单，恢复已扣减的商品库存并将订单状态更新为已关闭
+     * </p>
+     *
+     * @param orderId 订单ID
      */
     void cancelOrder(Long orderId);
 
     /**
-     * 查询用户的所有订单
-     * @param userId 用户id
-     * @return 订单VO列表
+     * <p>
+     * 查询指定用户的所有订单及订单详情
+     * </p>
+     *
+     * @param userId 用户ID
+     * @return 订单视图列表，包含订单详情和物流信息
      */
     List<OrderVO> queryOrdersByUserId(Long userId);
 
     /**
-     * 分页查询所有订单（管理端）
-     * @param pageNo 页码
+     * <p>
+     * 管理端分页查询所有订单及订单详情
+     * </p>
+     *
+     * @param pageNo 当前页码
      * @param pageSize 每页大小
-     * @return 订单VO分页数据
+     * @return 订单分页数据
      */
     PageDTO<OrderVO> queryOrdersByPage(Integer pageNo, Integer pageSize);
 }

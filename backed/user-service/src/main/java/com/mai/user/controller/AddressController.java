@@ -21,10 +21,8 @@ import java.util.List;
 
 /**
  * <p>
- *  前端控制器
+ * 收货地址控制器，提供地址查询接口，包含归属校验
  * </p>
- *
- * @author 虎哥
  */
 @RestController
 @RequestMapping("/addresses")
@@ -34,6 +32,15 @@ public class AddressController {
 
     private final IAddressService addressService;
 
+    /**
+     * <p>
+     * 根据地址ID查询收货地址详情，并校验地址是否属于当前登录用户
+     * </p>
+     *
+     * @param id 地址ID
+     * @return 收货地址信息
+     * @throws BadRequestException 当地址不属于当前用户时抛出
+     */
     @ApiOperation("根据id查询地址")
     @GetMapping("{addressId}")
     public AddressDTO findAddressById(@ApiParam("地址id") @PathVariable("addressId") Long id) {
@@ -46,6 +53,14 @@ public class AddressController {
         }
         return BeanUtils.copyBean(address, AddressDTO.class);
     }
+
+    /**
+     * <p>
+     * 查询当前登录用户的所有收货地址
+     * </p>
+     *
+     * @return 当前用户的收货地址列表
+     */
     @ApiOperation("查询当前用户地址列表")
     @GetMapping
     public List<AddressDTO> findMyAddresses() {

@@ -5,11 +5,8 @@ import com.mai.trade.domain.po.OrderLogistics;
 
 /**
  * <p>
- *  Mapper 接口
+ * 订单物流数据访问层，提供订单物流信息的数据库操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface OrderLogisticsMapper extends BaseMapper<OrderLogistics> {
 

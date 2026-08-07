@@ -21,10 +21,8 @@ import org.springframework.util.Assert;
 
 /**
  * <p>
- * 用户表 服务实现类
+ * 用户服务实现类，负责用户登录认证（密码校验、状态检查、JWT生成）和余额扣减等核心业务逻辑
  * </p>
- *
- * @author 虎哥
  */
 @Slf4j
 @Service
@@ -37,6 +35,16 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
 
     private final JwtProperties jwtProperties;
 
+    /**
+     * <p>
+     * 用户登录认证，依次校验用户名、账户状态、密码，通过后生成JWT令牌并返回用户信息
+     * </p>
+     *
+     * @param loginDTO 登录表单，包含用户名和密码
+     * @return 用户登录信息，包含令牌、用户名和余额
+     * @throws ForbiddenException 当用户被冻结时抛出
+     * @throws BadRequestException 当用户名或密码错误时抛出
+     */
     @Override
     public UserLoginVO login(LoginFormDTO loginDTO) {
         // 1.数据校验
@@ -64,6 +72,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
         return vo;
     }
 
+    /**
+     * <p>
+     * 扣减用户余额，先校验支付密码，再通过数据库更新余额，若余额不足则抛出异常
+     * </p>
+     *
+     * @param pw 支付密码
+     * @param totalFee 扣减金额
+     * @throws BizIllegalException 当支付密码错误时抛出
+     */
     @Override
     public void deductMoney(String pw, Integer totalFee) {
         log.info("开始扣款");

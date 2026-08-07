@@ -37,12 +37,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * <p>
+ * 搜索服务实现类，基于Elasticsearch实现商品全文搜索、动态过滤器聚合及索引增删操作
+ * </p>
+ */
 @Service
 public class SearchServiceImpl implements ISearchService {
 
     @Autowired
     private ItemClient itemClient;
 
+    /**
+     * <p>
+     * 全文搜索商品，构建Bool查询实现关键词匹配、品牌分类过滤、价格范围筛选，使用function_score对广告商品加权排序
+     * </p>
+     *
+     * @param query 搜索查询条件，包含关键词、品牌、分类、价格区间及分页参数
+     * @return 搜索结果分页数据，包含高亮名称
+     */
     @Override
     public PageDTO<ItemDTO> search(ItemPageQuery query) {
         PageDTO<ItemDTO> result = new PageDTO<>();
@@ -136,6 +149,14 @@ public class SearchServiceImpl implements ISearchService {
 
     }
 
+    /**
+     * <p>
+     * 获取动态过滤器，对搜索结果进行品牌和分类的聚合统计，返回各分类和品牌下的商品数量分布
+     * </p>
+     *
+     * @param query 搜索查询条件，用于确定聚合范围
+     * @return 品牌和分类的聚合结果
+     */
     @Override
     public CategoryAndBrandDTO filters(ItemPageQuery query) {
         if(query == null){
@@ -200,6 +221,13 @@ public class SearchServiceImpl implements ISearchService {
         return new CategoryAndBrandDTO(categories,brands);
     }
 
+    /**
+     * <p>
+     * 保存商品到Elasticsearch索引，通过远程调用商品服务获取商品信息后写入ES
+     * </p>
+     *
+     * @param itemId 商品ID
+     */
     @Override
     public void saveItemById(Long itemId) {
         RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(
@@ -225,6 +253,13 @@ public class SearchServiceImpl implements ISearchService {
         }
     }
 
+    /**
+     * <p>
+     * 从Elasticsearch索引中删除商品，用于商品下架时同步清理搜索数据
+     * </p>
+     *
+     * @param itemId 商品ID
+     */
     @Override
     public void deleteItemById(Long itemId) {
         RestHighLevelClient client = new RestHighLevelClient(RestClient.builder(

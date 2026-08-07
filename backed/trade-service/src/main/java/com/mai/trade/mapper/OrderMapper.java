@@ -5,11 +5,8 @@ import com.mai.trade.domain.po.Order;
 
 /**
  * <p>
- *  Mapper 接口
+ * 订单数据访问层，提供订单的数据库操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface OrderMapper extends BaseMapper<Order> {
 

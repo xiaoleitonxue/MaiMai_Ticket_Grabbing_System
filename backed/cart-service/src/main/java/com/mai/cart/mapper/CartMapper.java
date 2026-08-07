@@ -7,14 +7,19 @@ import org.apache.ibatis.annotations.Update;
 
 /**
  * <p>
- * 订单详情表 Mapper 接口
+ * 购物车数据访问层，提供购物车商品的自定义数据库操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface CartMapper extends BaseMapper<Cart> {
 
+    /**
+     * <p>
+     * 将指定用户和商品对应的购物车条目数量加一
+     * </p>
+     *
+     * @param itemId 商品ID
+     * @param userId 用户ID
+     */
     @Update("UPDATE cart SET num = num + 1 WHERE user_id = #{userId} AND item_id = #{itemId}")
     void updateNum(@Param("itemId") Long itemId, @Param("userId") Long userId);
 }

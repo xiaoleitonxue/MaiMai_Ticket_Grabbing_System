@@ -8,11 +8,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 收货地址服务实现类，负责用户收货地址的数据持久化操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 @Service
 public class AddressServiceImpl extends ServiceImpl<AddressMapper, Address> implements IAddressService {

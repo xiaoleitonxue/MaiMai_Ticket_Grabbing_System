@@ -11,6 +11,11 @@ import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import org.springframework.context.annotation.Bean;
 
+/**
+ * <p>
+ * Feign默认配置类，注册各微服务的降级工厂和请求拦截器，实现用户信息自动传递
+ * </p>
+ */
 public class DefaultFeignConfig {
 
     @Bean

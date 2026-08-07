@@ -5,11 +5,8 @@ import com.mai.trade.domain.po.OrderLogistics;
 
 /**
  * <p>
- *  服务类
+ * 订单物流服务接口，管理订单的物流配送信息
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface IOrderLogisticsService extends IService<OrderLogistics> {
 

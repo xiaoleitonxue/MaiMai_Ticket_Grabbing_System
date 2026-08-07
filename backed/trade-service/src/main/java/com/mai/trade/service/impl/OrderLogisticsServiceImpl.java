@@ -8,11 +8,8 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- *  服务实现类
+ * 订单物流服务实现类，负责订单物流配送信息的数据持久化操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 @Service
 public class OrderLogisticsServiceImpl extends ServiceImpl<OrderLogisticsMapper, OrderLogistics> implements IOrderLogisticsService {

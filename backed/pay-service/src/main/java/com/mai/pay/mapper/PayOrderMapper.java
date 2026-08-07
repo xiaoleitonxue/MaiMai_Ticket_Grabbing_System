@@ -5,11 +5,8 @@ import com.mai.pay.domain.po.PayOrder;
 
 /**
  * <p>
- * 支付订单 Mapper 接口
+ * 支付订单数据访问层，提供支付单的数据库操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-16
  */
 public interface PayOrderMapper extends BaseMapper<PayOrder> {
 

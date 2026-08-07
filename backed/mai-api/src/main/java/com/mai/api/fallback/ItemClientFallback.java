@@ -11,8 +11,22 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * <p>
+ * 商品服务Feign降级工厂，当远程调用失败时记录日志并根据方法返回空数据或抛出异常
+ * </p>
+ */
 @Slf4j
 public class ItemClientFallback implements FallbackFactory<ItemClient> {
+
+    /**
+     * <p>
+     * 创建带降级逻辑的ItemClient代理，查询方法返回空数据，写操作抛异常
+     * </p>
+     *
+     * @param cause 远程调用失败的异常原因
+     * @return 降级后的ItemClient实现
+     */
     @Override
     public ItemClient create(Throwable cause) {
         return new ItemClient() {

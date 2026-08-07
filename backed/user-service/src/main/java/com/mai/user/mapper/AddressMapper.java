@@ -5,11 +5,8 @@ import com.mai.user.domain.po.Address;
 
 /**
  * <p>
- *  Mapper 接口
+ * 收货地址数据访问层，提供用户收货地址的数据库操作
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 public interface AddressMapper extends BaseMapper<Address> {
 

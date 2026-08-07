@@ -31,11 +31,8 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- * 订单详情表 服务实现类
+ * 购物车服务实现类，负责购物车商品添加、查询、删除及最大数量校验等核心业务逻辑
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 @Service
 @RequiredArgsConstructor
@@ -49,6 +46,13 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
     private final ItemClient itemClient;
     private final CartProperties cartProperties;
 
+    /**
+     * <p>
+     * 添加商品到购物车，若商品已存在则更新数量，否则校验购物车容量后新增条目
+     * </p>
+     *
+     * @param cartFormDTO 购物车表单数据，包含商品ID和规格信息
+     */
     @Override
     public void addItem2Cart(CartFormDTO cartFormDTO) {
         // 1.获取登录用户
@@ -72,6 +76,13 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         save(cart);
     }
 
+    /**
+     * <p>
+     * 查询当前登录用户的购物车列表，并远程调用商品服务填充最新价格和库存信息
+     * </p>
+     *
+     * @return 当前用户的购物车商品视图列表，若购物车为空则返回空列表
+     */
     @Override
     public List<CartVO> queryMyCarts() {
         // 1.查询我的购物车列表
@@ -131,6 +142,13 @@ public class CartServiceImpl extends ServiceImpl<CartMapper, Cart> implements IC
         }
     }
 
+    /**
+     * <p>
+     * 根据商品ID集合批量删除当前用户购物车中的对应条目
+     * </p>
+     *
+     * @param itemIds 待删除的商品ID集合
+     */
     @Override
     public void removeByItemIds(Collection<Long> itemIds) {
         // 1.构建删除条件，userId和itemId

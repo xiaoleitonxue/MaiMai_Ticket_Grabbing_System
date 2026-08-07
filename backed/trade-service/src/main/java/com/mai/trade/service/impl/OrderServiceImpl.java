@@ -39,11 +39,8 @@ import java.util.stream.Collectors;
 
 /**
  * <p>
- * 订单服务实现类
+ * 订单服务实现类，负责订单创建、支付标记、取消及查询等核心业务逻辑，涉及远程调用商品服务、购物车服务和支付服务
  * </p>
- *
- * @author 虎哥
- * @since 2023-05-05
  */
 @Slf4j
 @Service
@@ -55,6 +52,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final CartClient cartClient;
     private final RabbitTemplate rabbitTemplate;
 
+    /**
+     * <p>
+     * 创建订单，完整流程包含：商品校验、价格计算、订单保存、购物车清理及库存扣减，使用分布式事务保证一致性
+     * </p>
+     *
+     * @param orderFormDTO 订单表单数据，包含订单明细和支付方式
+     * @return 新创建的订单ID
+     * @throws BadRequestException 当商品不存在时抛出
+     */
     @Override
 //    @Transactional
     @GlobalTransactional
@@ -120,6 +126,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return order.getId();
     }
 
+    /**
+     * <p>
+     * 标记订单为已支付状态，使用乐观锁确保仅在订单状态为未支付时更新
+     * </p>
+     *
+     * @param orderId 订单ID
+     */
     @Override
     public void markOrderPaySuccess(Long orderId) {
     /*// 查询订单
@@ -144,6 +157,13 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 .update();
     }
 
+    /**
+     * <p>
+     * 取消订单，恢复已扣减的商品库存（将数量设为负值后调用商品服务归还），并将订单状态更新为已关闭，使用分布式事务
+     * </p>
+     *
+     * @param orderId 订单ID
+     */
     @Override
     @GlobalTransactional
     public void cancelOrder(Long orderId) {
@@ -174,6 +194,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         log.info("订单已取消，orderId: {}", orderId);
     }
 
+    /**
+     * <p>
+     * 查询指定用户的所有订单及订单详情，按创建时间倒序排列
+     * </p>
+     *
+     * @param userId 用户ID
+     * @return 订单视图列表，包含订单详情
+     */
     @Override
     public List<OrderVO> queryOrdersByUserId(Long userId) {
         List<Order> orders = lambdaQuery().eq(Order::getUserId, userId).orderByDesc(Order::getCreateTime).list();
@@ -207,6 +235,15 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         return orderVOList;
     }
 
+    /**
+     * <p>
+     * 管理端分页查询所有订单及订单详情，按创建时间倒序排列
+     * </p>
+     *
+     * @param pageNo 当前页码
+     * @param pageSize 每页大小
+     * @return 订单分页数据
+     */
     @Override
     public PageDTO<OrderVO> queryOrdersByPage(Integer pageNo, Integer pageSize) {
         Page<Order> page = lambdaQuery().orderByDesc(Order::getCreateTime).page(new Page<>(pageNo, pageSize));
