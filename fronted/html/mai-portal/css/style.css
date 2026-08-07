@@ -1,0 +1,246 @@
+/* ==================== MaiMai 抢票系统 - 全局样式 ==================== */
+
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --accent: #06b6d4;
+  --dark: #0f172a;
+  --dark-secondary: #1e293b;
+  --gray-100: #f1f5f9;
+  --gray-200: #e2e8f0;
+  --gray-300: #cbd5e1;
+  --gray-400: #94a3b8;
+  --gray-500: #64748b;
+  --gray-600: #475569;
+  --white: #ffffff;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --transition: 0.2s ease;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Microsoft YaHei", sans-serif;
+  background: var(--gray-100);
+  color: var(--dark);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+img { max-width: 100%; display: block; }
+
+/* ==================== 顶部导航栏 ==================== */
+.mai-header {
+  background: var(--dark);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.mai-header-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  font-size: 13px;
+}
+.mai-header-left { color: var(--gray-400); }
+.mai-header-right { display: flex; align-items: center; gap: 16px; }
+.mai-header-link { color: var(--gray-400); transition: color var(--transition); cursor: pointer; }
+.mai-header-link:hover { color: var(--accent); }
+.mai-header-divider { color: rgba(255,255,255,0.12); }
+.mai-username { color: var(--accent); font-weight: 600; }
+
+/* ==================== 主导航栏 ==================== */
+.mai-navbar {
+  background: linear-gradient(135deg, var(--dark), var(--dark-secondary));
+  border-bottom: 2px solid rgba(99,102,241,0.3);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.mai-navbar-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+.mai-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--white);
+  cursor: pointer;
+}
+.mai-logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.mai-nav-links { display: flex; gap: 8px; list-style: none; }
+.mai-nav-links a {
+  display: block; padding: 8px 18px; border-radius: 6px;
+  color: var(--gray-300); font-size: 14px; font-weight: 500;
+  transition: all var(--transition);
+}
+.mai-nav-links a:hover, .mai-nav-links a.active { background: rgba(255,255,255,0.08); color: var(--white); }
+.mai-nav-actions { display: flex; align-items: center; gap: 12px; }
+.mai-cart-btn {
+  position: relative; display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 8px; background: rgba(255,255,255,0.08);
+  color: var(--white); font-size: 14px; font-weight: 500; cursor: pointer;
+  transition: all var(--transition); border: none;
+}
+.mai-cart-btn:hover { background: rgba(255,255,255,0.15); }
+.mai-cart-badge {
+  position: absolute; top: -6px; right: -6px;
+  min-width: 20px; height: 20px; padding: 0 5px;
+  background: var(--danger); color: var(--white); font-size: 11px; font-weight: 700;
+  border-radius: 10px; display: flex; align-items: center; justify-content: center;
+}
+
+/* ==================== 按钮样式 ==================== */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  padding: 10px 24px; border-radius: var(--radius); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: all var(--transition); border: none; white-space: nowrap;
+}
+.btn-primary { background: var(--primary); color: var(--white); }
+.btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(99,102,241,0.4); }
+.btn-success { background: var(--success); color: var(--white); }
+.btn-success:hover { background: #059669; }
+.btn-danger { background: var(--danger); color: var(--white); }
+.btn-danger:hover { background: #dc2626; }
+.btn-outline { background: transparent; border: 2px solid var(--gray-300); color: var(--gray-600); }
+.btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn-lg { padding: 14px 36px; font-size: 16px; }
+.btn-block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+/* ==================== 卡片样式 ==================== */
+.card {
+  background: var(--white); border-radius: 12px;
+  box-shadow: var(--shadow); overflow: hidden;
+  transition: all var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+.card-body { padding: 20px; }
+
+/* ==================== 表单样式 ==================== */
+.form-group { margin-bottom: 20px; }
+.form-label { display: block; margin-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--gray-600); }
+.form-input {
+  width: 100%; padding: 10px 14px; border: 2px solid var(--gray-200);
+  border-radius: var(--radius); font-size: 14px; color: var(--dark);
+  transition: border-color var(--transition); outline: none; background: var(--white);
+}
+.form-input:focus { border-color: var(--primary); }
+.form-select {
+  width: 100%; padding: 10px 14px; border: 2px solid var(--gray-200);
+  border-radius: var(--radius); font-size: 14px; color: var(--dark);
+  transition: border-color var(--transition); outline: none; background: var(--white);
+  cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%2394a3b8' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat; background-position: right 12px center; background-size: 14px;
+  padding-right: 40px;
+}
+.form-select:focus { border-color: var(--primary); }
+
+/* ==================== 弹窗/模态框 ==================== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+.modal {
+  background: var(--white); border-radius: 16px; padding: 32px;
+  min-width: 420px; max-width: 90vw; box-shadow: var(--shadow-lg);
+  animation: scaleIn 0.2s ease;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px;
+}
+.modal-header h3 { font-size: 20px; font-weight: 700; }
+.modal-close { font-size: 24px; cursor: pointer; color: var(--gray-400); transition: color var(--transition); background: none; border: none; }
+.modal-close:hover { color: var(--danger); }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scaleIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+
+/* ==================== 页面容器 ==================== */
+.page-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px 60px; }
+
+/* ==================== 底部 ==================== */
+.mai-footer {
+  background: var(--dark); padding: 40px 0 24px; margin-top: 60px;
+}
+.mai-footer-inner { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+.mai-footer-features {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px;
+  padding-bottom: 32px; border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.mai-feature-item {
+  display: flex; align-items: flex-start; gap: 12px; color: var(--gray-400);
+}
+.mai-feature-icon { font-size: 24px; flex-shrink: 0; }
+.mai-feature-item h4 { font-size: 14px; color: var(--white); margin-bottom: 4px; }
+.mai-feature-item p { font-size: 12px; color: var(--gray-500); }
+.mai-footer-bottom {
+  text-align: center; padding-top: 20px;
+  color: var(--gray-600); font-size: 13px;
+}
+
+/* ==================== 标签 ==================== */
+.tag {
+  display: inline-block; padding: 3px 10px; border-radius: 4px;
+  font-size: 12px; font-weight: 600; line-height: 1.5;
+}
+.tag-primary { background: rgba(99,102,241,0.1); color: var(--primary); }
+.tag-success { background: rgba(16,185,129,0.1); color: var(--success); }
+.tag-danger { background: rgba(239,68,68,0.1); color: var(--danger); }
+.tag-warning { background: rgba(245,158,11,0.1); color: var(--warning); }
+
+/* ==================== 空状态 ==================== */
+.empty-state {
+  text-align: center; padding: 60px 20px; color: var(--gray-400);
+}
+.empty-state .icon { font-size: 48px; margin-bottom: 16px; }
+.empty-state p { font-size: 16px; margin-bottom: 20px; }
+
+/* ==================== 加载动画 ==================== */
+.loading {
+  display: flex; align-items: center; justify-content: center; padding: 40px;
+}
+.spinner {
+  width: 36px; height: 36px; border: 3px solid var(--gray-200);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ==================== 价格 ==================== */
+.price { color: var(--danger); font-weight: 700; }
+.price-symbol { font-size: 14px; }
+.price-value { font-size: 22px; }
+
+/* ==================== 响应式 ==================== */
+@media (max-width: 768px) {
+  .mai-footer-features { grid-template-columns: repeat(2, 1fr); }
+  .mai-navbar-inner { height: auto; padding: 12px 20px; flex-wrap: wrap; }
+  .mai-nav-links { overflow-x: auto; }
+}

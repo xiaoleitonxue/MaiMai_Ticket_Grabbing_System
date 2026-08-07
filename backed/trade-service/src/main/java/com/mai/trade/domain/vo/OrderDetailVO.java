@@ -1,0 +1,22 @@
+package com.mai.trade.domain.vo;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+
+@Data
+@ApiModel(description = "订单详情VO")
+public class OrderDetailVO {
+    @ApiModelProperty("商品id")
+    private Long itemId;
+    @ApiModelProperty("购买数量")
+    private Integer num;
+    @ApiModelProperty("商品标题")
+    private String name;
+    @ApiModelProperty("商品动态属性键值集")
+    private String spec;
+    @ApiModelProperty("价格,单位：分")
+    private Integer price;
+    @ApiModelProperty("商品图片")
+    private String image;
+}

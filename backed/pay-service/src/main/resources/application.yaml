@@ -1,0 +1,13 @@
+server:
+  port: 8085
+feign:
+  okhttp:
+    enabled: true
+  sentinel:
+    enabled: true
+mai:
+  db:
+    database: mai-pay
+  swagger:
+    title: "支付服务接口文档"
+    package: com.mai.pay.controller

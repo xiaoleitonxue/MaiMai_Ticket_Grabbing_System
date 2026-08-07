@@ -1,0 +1,112 @@
+# ============================================
+# IDE - IntelliJ IDEA
+# ============================================
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+
+# ============================================
+# IDE - VS Code
+# ============================================
+.vscode/
+
+# ============================================
+# Java / Maven
+# ============================================
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.properties
+
+# ============================================
+# Spring Boot 敏感配置 (含数据库密码等隐私信息)
+# ============================================
+application-dev.yaml
+application-dev.yml
+application-local.yaml
+application-local.yml
+application-prod.yaml
+application-prod.yml
+
+# ============================================
+# 密钥 & 证书文件 (极度敏感)
+# ============================================
+*.jks
+*.p12
+*.pfx
+*.pem
+*.key
+*.keystore
+*.truststore
+*.crt
+
+# ============================================
+# 日志文件
+# ============================================
+logs/
+*.log
+*.log.*
+
+# ============================================
+# 操作系统
+# ============================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+*~
+
+# ============================================
+# 编辑器
+# ============================================
+*.swp
+*.swo
+*.swn
+*.bak
+*.orig
+
+# ============================================
+# 前端 (Node.js / Vue)
+# ============================================
+node_modules/
+dist/
+build/
+.nuxt/
+.output/
+
+# 前端环境变量 (含API密钥等)
+.env.local
+.env.*.local
+.env.development.local
+.env.production.local
+
+# 包管理器
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ============================================
+# 临时文件
+# ============================================
+*.tmp
+*.temp
+*.cache
+tmp/
+temp/

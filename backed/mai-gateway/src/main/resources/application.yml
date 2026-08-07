@@ -1,0 +1,48 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: mai-gateway
+  cloud:
+    nacos:
+      server-addr: 192.168.6.102:8848
+    gateway:
+      routes:
+        - id: cart
+          uri: lb://cart-service
+          predicates:
+            - Path=/carts/**
+        - id: item
+          uri: lb://item-service
+          predicates:
+            - Path=/items/**
+        - id: search
+          uri: lb://search-service
+          predicates:
+            - Path=/search/**
+        - id: user
+          uri: lb://user-service
+          predicates:
+            - Path=/users/**,/addresses/**
+        - id: trade
+          uri: lb://trade-service
+          predicates:
+            - Path=/orders/**
+        - id: pay
+          uri: lb://pay-service
+          predicates:
+            - Path=/pay-orders/**
+      default-filters:
+        - PrintAny=1,2,3
+mai:
+  jwt:
+    location: classpath:mai.jks
+    alias: mai
+    password: mai123
+    tokenTTL: 30m
+  auth:
+    excludePaths:
+      - /search/**
+      - /users/login
+      - /items/**
+      - /hi

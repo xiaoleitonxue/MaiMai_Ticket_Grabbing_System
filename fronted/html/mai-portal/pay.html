@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付订单 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .pay-page { background: var(--gray-100); min-height: 100vh; }
+    .pay-header {
+      background: var(--dark); padding: 0;
+    }
+    .pay-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; height: 48px; font-size: 13px;
+    }
+    .pay-header-inner a { color: var(--gray-400); }
+    .pay-header-inner a:hover { color: var(--accent); }
+    .pay-header-inner span { color: var(--gray-500); margin: 0 8px; }
+
+    .pay-container { max-width: 500px; margin: 60px auto; padding: 0 20px; }
+    .pay-card {
+      background: var(--white); border-radius: 16px; padding: 40px 32px;
+      box-shadow: var(--shadow-lg); text-align: center;
+    }
+    .pay-icon { font-size: 56px; margin-bottom: 16px; }
+    .pay-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+    .pay-amount { font-size: 42px; font-weight: 800; color: var(--danger); margin-bottom: 8px; }
+    .pay-order-no { font-size: 13px; color: var(--gray-500); margin-bottom: 24px; }
+    .pay-balance { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; }
+    .pay-balance strong { color: var(--accent); }
+    .pay-error { color: var(--danger); font-size: 13px; margin-bottom: 16px; min-height: 20px; }
+
+    .countdown { margin-top: 20px; font-size: 13px; color: var(--gray-500); }
+    .countdown strong { color: var(--warning); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="pay-header">
+    <div class="pay-header-inner">
+      <a href="/index.html">首页</a><span>/</span>
+      <span style="color:var(--gray-300);">支付订单</span>
+    </div>
+  </div>
+
+  <div class="pay-container">
+    <div class="pay-card">
+      <div class="pay-icon">💳</div>
+      <div class="pay-title">余额支付</div>
+      <div class="pay-amount">¥{{ formatPrice(amount) }}</div>
+      <div class="pay-order-no">订单号：{{ orderId }}</div>
+      <div class="pay-balance">
+        账户余额：<strong>¥{{ formatPrice(userBalance) }}</strong>
+        <span v-if="userBalance < amount" style="color:var(--danger);">（余额不足！）</span>
+      </div>
+
+      <div class="form-group" style="text-align:left;">
+        <label class="form-label">支付密码</label>
+        <input type="password" class="form-input" v-model="payPassword" placeholder="请输入支付密码" @keydown.enter="pay">
+      </div>
+
+      <div class="pay-error">{{ errorMsg }}</div>
+
+      <button class="btn btn-danger btn-lg btn-block" @click="pay" :disabled="paying">
+        {{ paying ? '支付中...' : '🔒 确认支付 ¥' + formatPrice(amount) }}
+      </button>
+
+      <div class="countdown">
+        请在 <strong>{{ countdownText }}</strong> 内完成支付，超时订单将自动取消
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    orderId: '',
+    amount: 0,
+    userBalance: 0,
+    payPassword: '',
+    errorMsg: '',
+    paying: false,
+    countdownSeconds: 60,
+    countdownTimer: null
+  },
+  computed: {
+    countdownText() {
+      const m = Math.floor(this.countdownSeconds / 60);
+      const s = this.countdownSeconds % 60;
+      return m > 0 ? m + '分' + s + '秒' : s + '秒';
+    }
+  },
+  created() {
+    const userInfo = util.getUserInfo();
+    if (!userInfo) { location.href = '/login.html'; return; }
+    this.userBalance = userInfo.balance || 0;
+    this.orderId = util.getUrlParam('orderId');
+    if (!this.orderId) {
+      this.orderId = util.store.get('pending-order-id');
+      this.amount = util.store.get('pending-order-amount') || 0;
+    }
+    if (!this.orderId) {
+      util.toast('订单信息丢失', 'error');
+      location.href = '/orders.html';
+      return;
+    }
+    if (!this.amount) {
+      this.loadOrderAmount();
+    }
+    this.startCountdown();
+  },
+  methods: {
+    startCountdown() {
+      this.countdownTimer = setInterval(() => {
+        if (this.countdownSeconds > 0) {
+          this.countdownSeconds--;
+        } else {
+          clearInterval(this.countdownTimer);
+          this.errorMsg = '支付超时，订单已取消';
+          this.paying = true;
+        }
+      }, 1000);
+    },
+    formatPrice: util.formatPrice,
+    async loadOrderAmount() {
+      try {
+        const res = await axios.get('/api/orders/' + this.orderId);
+        const data = res.data;
+        if (data) {
+          this.amount = data.totalFee || 0;
+        }
+      } catch (e) {}
+    },
+    async pay() {
+      if (!this.payPassword) {
+        this.errorMsg = '请输入支付密码';
+        return;
+      }
+      this.errorMsg = '';
+      this.paying = true;
+      try {
+        // 1. 生成支付单
+        const applyRes = await axios.post('/api/pay-orders', {
+          bizOrderNo: Number(this.orderId),
+          amount: this.amount,
+          payChannelCode: 'balance',
+          payType: 5,
+          orderInfo: 'MaiMai抢票订单'
+        });
+        const payOrderId = applyRes.data.id;
+        if (!payOrderId) {
+          throw new Error('生成支付单失败');
+        }
+        // 2. 执行支付（内部调用 userClient.deductMoney 实现真扣款）
+        await axios.post('/api/pay-orders/' + payOrderId, { pw: this.payPassword });
+        // 3. 标记订单已支付
+        await axios.put('/api/orders/' + this.orderId);
+        util.store.del('pending-order-id');
+        util.store.del('pending-order-amount');
+        // 4. 更新本地余额缓存
+        try {
+          const userInfo = util.getUserInfo();
+          if (userInfo) {
+            userInfo.balance = (userInfo.balance || 0) - this.amount;
+            sessionStorage.setItem('user-info', JSON.stringify(userInfo));
+          }
+        } catch (e) {}
+        location.href = '/pay-success.html?orderId=' + this.orderId;
+      } catch (e) {
+        const msg = e.response?.data?.msg || '';
+        if (msg === '订单已经支付！') {
+          location.href = '/pay-success.html?orderId=' + this.orderId;
+          return;
+        }
+        this.errorMsg = msg || e.message || '支付失败，请稍后重试';
+      } finally {
+        this.paying = false;
+      }
+    }
+  }
+});
+</script>
+</body>
+</html>

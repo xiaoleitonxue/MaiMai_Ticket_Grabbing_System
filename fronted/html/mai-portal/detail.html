@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>活动详情 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .detail-header {
+      background: var(--dark); padding: 0;
+    }
+    .detail-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; height: 48px;
+      font-size: 13px;
+    }
+    .detail-header-inner a { color: var(--gray-400); transition: color var(--transition); }
+    .detail-header-inner a:hover { color: var(--accent); }
+    .detail-header-inner span { color: var(--gray-500); margin: 0 8px; }
+
+    .detail-main {
+      max-width: 1200px; margin: 0 auto; padding: 32px 20px 60px;
+      display: grid; grid-template-columns: 1fr 400px; gap: 32px;
+    }
+    .detail-image {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 16px; height: 400px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 100px;
+    }
+    .detail-info { background: var(--white); border-radius: 16px; padding: 32px; box-shadow: var(--shadow); }
+    .detail-info h1 { font-size: 24px; font-weight: 800; margin-bottom: 16px; }
+    .detail-meta { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+    .detail-price-box {
+      background: rgba(239,68,68,0.05); border-radius: 12px;
+      padding: 20px; margin-bottom: 20px;
+    }
+    .detail-price-box .price { font-size: 36px; }
+    .detail-stock { font-size: 14px; color: var(--gray-500); margin-top: 4px; }
+    .detail-stock.low { color: var(--danger); font-weight: 600; }
+    .detail-actions { display: flex; gap: 12px; }
+    .detail-actions .btn { flex: 1; }
+    .detail-spec { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--gray-200); }
+    .detail-spec h3 { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .detail-spec p { color: var(--gray-500); font-size: 14px; line-height: 2; }
+
+    @media (max-width: 768px) {
+      .detail-main { grid-template-columns: 1fr; }
+      .detail-image { height: 250px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="detail-header">
+    <div class="detail-header-inner">
+      <a href="/index.html">首页</a>
+      <span>/</span>
+      <span style="color:var(--gray-300);">{{ item.name || '活动详情' }}</span>
+      <span style="flex:1"></span>
+      <a href="/cart.html" style="color:var(--accent);">🛒 选票清单</a>
+    </div>
+  </div>
+
+  <div class="detail-main" v-if="!loading">
+    <div class="detail-image">
+      <img v-if="item.image" :src="item.image" style="width:100%;height:100%;object-fit:cover;border-radius:16px;" alt="">
+      <span v-else style="font-size:100px;">{{ getEmoji(item.id || 0) }}</span>
+    </div>
+    <div class="detail-info">
+      <h1>{{ item.name }}</h1>
+      <div class="detail-meta">
+        <span class="tag tag-primary" v-if="item.category">{{ item.category }}</span>
+        <span class="tag tag-success" v-if="item.brand">{{ item.brand }}</span>
+        <span class="tag tag-warning" v-if="item.isAD">推广</span>
+      </div>
+      <div class="detail-price-box">
+        <div class="price">
+          <span class="price-symbol">¥</span>
+          <span class="price-value">{{ formatPrice(item.price) }}</span>
+        </div>
+        <div class="detail-stock" :class="{low: item.stock <= 10}">
+          库存：{{ item.stock || 0 }} 张
+          <span v-if="item.stock <= 10 && item.stock > 0" style="color:var(--danger);">（即将售罄！）</span>
+          <span v-if="item.stock === 0" style="color:var(--danger);">（已售罄）</span>
+        </div>
+      </div>
+      <div style="margin-bottom: 16px;">
+        <label style="font-size:14px;font-weight:600;color:var(--gray-600);display:block;margin-bottom:8px;">购买数量</label>
+        <div class="cart-qty" style="display:inline-flex;">
+          <button @click="changeQty(-1)" :disabled="qty <= 1">−</button>
+          <input type="number" v-model.number="qty" @input="onQtyInput" min="1" :max="item.stock || 999" style="width:60px;text-align:center;border:1px solid var(--gray-200);border-radius:6px;height:36px;font-size:15px;font-weight:600;outline:none;margin:0 4px;">
+          <button @click="changeQty(1)" :disabled="item.stock > 0 && qty >= item.stock">+</button>
+        </div>
+        <span style="font-size:12px;color:var(--gray-500);margin-left:12px;">库存 {{ item.stock || 0 }} 张</span>
+      </div>
+      <div class="detail-actions">
+        <button class="btn btn-primary btn-lg" @click="addToCart" :disabled="item.stock === 0 || qty < 1">
+          🛒 加入清单
+        </button>
+        <button class="btn btn-danger btn-lg" @click="buyNow" :disabled="item.stock === 0 || qty < 1">
+          ⚡ 立即抢票
+        </button>
+      </div>
+      <div class="detail-spec" v-if="item.spec">
+        <h3>📋 活动详情</h3>
+        <p>{{ item.spec }}</p>
+      </div>
+      <div class="detail-spec">
+        <h3>📊 数据统计</h3>
+        <p>已售出：{{ item.sold || 0 }} 张 | 评论数：{{ item.commentCount || 0 }} 条</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="loading" v-else>
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    item: {},
+    loading: true,
+    qty: 1
+  },
+  created() {
+    const id = util.getUrlParam('id');
+    if (!id) {
+      util.toast('参数错误', 'error');
+      location.href = '/index.html';
+      return;
+    }
+    this.loadItem(id);
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    getEmoji(id) {
+      const emojis = ['🎵', '🎸', '🎹', '🎤', '🎭', '🎪', '🎬', '🎯', '🎮', '🎲'];
+      return emojis[id % emojis.length];
+    },
+    getGradient(id) {
+      const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+      ];
+      return gradients[id % gradients.length];
+    },
+    async loadItem(id) {
+      try {
+        const res = await axios.get('/api/items/' + id);
+        this.item = res.data || {};
+      } catch (e) {
+        util.toast('加载活动详情失败', 'error');
+      } finally {
+        this.loading = false;
+      }
+    },
+    changeQty(delta) {
+      var newQty = this.qty + delta;
+      if (newQty < 1) return;
+      if (this.item.stock > 0 && newQty > this.item.stock) return;
+      this.qty = newQty;
+    },
+    onQtyInput() {
+      if (!this.qty || this.qty < 1) {
+        this.qty = 1;
+      } else if (this.item.stock > 0 && this.qty > this.item.stock) {
+        this.qty = this.item.stock;
+      }
+    },
+    async addToCart() {
+      if (!util.isLogin()) {
+        sessionStorage.setItem('login-redirect', location.href);
+        location.href = '/login.html';
+        return;
+      }
+      try {
+        await api.cart.add(this.item.id, this.item.name, this.item.spec, this.item.price, this.item.image);
+        if (this.qty > 1) {
+          var res = await axios.get('/api/carts');
+          var items = Array.isArray(res.data) ? res.data : [];
+          var cartItem = items.find(function(i) { return i.itemId === this.item.id; }.bind(this));
+          if (cartItem) {
+            await api.cart.update({ id: cartItem.id, num: this.qty });
+          }
+        }
+        util.toast('已加入选票清单！', 'success');
+      } catch (e) {
+        util.toast('加入失败，请稍后重试', 'error');
+      }
+    },
+    buyNow() {
+      if (!util.isLogin()) {
+        sessionStorage.setItem('login-redirect', location.href);
+        location.href = '/login.html';
+        return;
+      }
+      var self = this;
+      api.cart.add(this.item.id, this.item.name, this.item.spec, this.item.price, this.item.image).then(function() {
+        if (self.qty > 1) {
+          return axios.get('/api/carts').then(function(res) {
+            var items = Array.isArray(res.data) ? res.data : [];
+            var cartItem = items.find(function(i) { return i.itemId === self.item.id; });
+            if (cartItem) {
+              return api.cart.update({ id: cartItem.id, num: self.qty });
+            }
+          });
+        }
+      }).then(function() {
+        location.href = '/cart.html?selectItemId=' + self.item.id;
+      }).catch(function() {
+        util.toast('操作失败', 'error');
+      });
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MaiMai抢票系统 - 首页</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .hero-banner {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #312e81 100%);
+      padding: 60px 0 80px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-banner::before {
+      content: '';
+      position: absolute;
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, rgba(99,102,241,0.2) 0%, transparent 70%);
+      top: -100px; right: 10%;
+      border-radius: 50%;
+    }
+    .hero-content {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      position: relative; z-index: 1;
+    }
+    .hero-content h1 {
+      font-size: 42px; font-weight: 800; color: var(--white);
+      margin-bottom: 12px;
+    }
+    .hero-content h1 span { background: linear-gradient(135deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-content p { color: var(--gray-400); font-size: 16px; margin-bottom: 32px; max-width: 500px; }
+
+    .search-box {
+      display: flex; gap: 12px; max-width: 600px;
+    }
+    .search-box input {
+      flex: 1; padding: 14px 20px; border: 2px solid rgba(255,255,255,0.15);
+      border-radius: 12px; font-size: 15px; background: rgba(255,255,255,0.06);
+      color: var(--white); outline: none; transition: all var(--transition);
+    }
+    .search-box input::placeholder { color: var(--gray-500); }
+    .search-box input:focus { border-color: var(--primary); background: rgba(255,255,255,0.1); }
+    .search-box .btn { padding: 14px 32px; border-radius: 12px; font-size: 15px; }
+
+    .filter-bar {
+      background: var(--white); border-radius: 12px;
+      padding: 20px 24px; margin-bottom: 24px;
+      box-shadow: var(--shadow); display: flex; gap: 16px; align-items: center;
+      flex-wrap: wrap;
+    }
+    .filter-bar .form-select { width: auto; min-width: 140px; }
+
+    .count-info { color: var(--gray-500); font-size: 14px; margin-bottom: 16px; }
+    .count-info strong { color: var(--dark); }
+
+    .ticket-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+      gap: 20px;
+    }
+    .ticket-card {
+      background: var(--white); border-radius: 12px;
+      overflow: hidden; box-shadow: var(--shadow);
+      transition: all 0.3s ease; cursor: pointer;
+    }
+    .ticket-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.12); }
+    .ticket-img {
+      height: 180px; background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 56px; position: relative; overflow: hidden;
+    }
+    .ticket-img .ad-badge {
+      position: absolute; top: 10px; left: 10px;
+      background: var(--warning); color: var(--white); font-size: 11px;
+      padding: 3px 8px; border-radius: 4px; font-weight: 700;
+    }
+    .ticket-info { padding: 16px; }
+    .ticket-name {
+      font-size: 15px; font-weight: 700; color: var(--dark);
+      margin-bottom: 6px; display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+      overflow: hidden; min-height: 40px;
+    }
+    .ticket-name em {
+      color: #ef4444; font-style: normal;
+    }
+    .ticket-meta {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 10px; font-size: 12px; color: var(--gray-500);
+    }
+    .ticket-footer {
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .ticket-price { font-size: 22px; font-weight: 800; color: var(--danger); }
+    .ticket-price .unit { font-size: 13px; font-weight: 500; }
+    .ticket-stock { font-size: 12px; color: var(--gray-500); }
+    .ticket-stock.low { color: var(--danger); font-weight: 600; }
+
+    .pagination {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-top: 32px;
+    }
+    .pagination button {
+      padding: 8px 16px; border: 1px solid var(--gray-200);
+      border-radius: 6px; background: var(--white); cursor: pointer;
+      font-size: 14px; color: var(--gray-600); transition: all var(--transition);
+    }
+    .pagination button:hover { border-color: var(--primary); color: var(--primary); }
+    .pagination button.active { background: var(--primary); color: var(--white); border-color: var(--primary); }
+    .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- 顶部导航 -->
+  <header class="mai-header">
+    <div class="mai-header-inner">
+      <div class="mai-header-left">🎫 欢迎来到MaiMai抢票系统</div>
+      <div class="mai-header-right">
+        <template v-if="userInfo">
+          <span class="mai-welcome">👋 你好，</span>
+          <span class="mai-username">{{ userInfo.username }}</span>
+          <span class="mai-header-divider">|</span>
+          <span style="color:var(--gray-400);font-size:13px">余额：<strong style="color:var(--accent)">¥{{ formatPrice(userInfo.balance) }}</strong></span>
+          <span class="mai-header-divider">|</span>
+          <a href="/orders.html" class="mai-header-link">我的订单</a>
+          <span class="mai-header-divider">|</span>
+          <a class="mai-header-link" @click="logout">退出登录</a>
+        </template>
+        <template v-else>
+          <a href="/login.html" class="mai-header-link">请登录</a>
+        </template>
+      </div>
+    </div>
+  </header>
+
+  <!-- 主导航 -->
+  <nav class="mai-navbar">
+    <div class="mai-navbar-inner">
+      <div class="mai-logo" @click="reload">
+        <div class="mai-logo-icon">🎫</div>
+        MaiMai
+      </div>
+      <ul class="mai-nav-links">
+        <li><a href="/index.html" class="active">首页</a></li>
+        <li><a href="/cart.html">选票清单 <span v-if="cartCount > 0" class="mai-cart-badge" style="position:static;display:inline-flex;margin-left:4px;">{{ cartCount }}</span></a></li>
+        <li><a href="/orders.html">我的订单</a></li>
+      </ul>
+      <div class="mai-nav-actions">
+        <button class="mai-cart-btn" @click="goCart">
+          🛒 清单 <span v-if="cartCount > 0" class="mai-cart-badge">{{ cartCount }}</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- 搜索横幅 -->
+  <div class="hero-banner">
+    <div class="hero-content">
+      <h1>🔥 热门活动 <span>一票难求</span></h1>
+      <p>演唱会、音乐节、话剧、展览... 热门票务尽在MaiMai，快来抢票吧！</p>
+      <div class="search-box">
+        <input type="text" v-model="keyword" placeholder="搜索你感兴趣的活动..." @keydown.enter="search">
+        <button class="btn btn-primary" @click="search">🔍 搜索</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 主内容 -->
+  <div class="page-container">
+    <!-- 筛选栏 -->
+    <div class="filter-bar">
+      <div style="font-weight:600;font-size:14px;color:var(--dark)">筛选：</div>
+      <select class="form-select" v-model="filterCategory" @change="search">
+        <option value="">全部分类</option>
+        <option v-for="c in categories" :value="c">{{ c }}</option>
+      </select>
+      <select class="form-select" v-model="filterBrand" @change="search">
+        <option value="">全部品牌</option>
+        <option v-for="b in brands" :value="b">{{ b }}</option>
+      </select>
+      <select class="form-select" v-model="sortBy" @change="search">
+        <option value="">默认排序</option>
+        <option value="price">价格排序</option>
+        <option value="sold">销量排序</option>
+        <option value="update_time">最新发布</option>
+      </select>
+      <select class="form-select" v-model="sortAsc" @change="search" style="min-width:100px;">
+        <option :value="false">降序</option>
+        <option :value="true">升序</option>
+      </select>
+    </div>
+
+    <!-- 加载中 -->
+    <div class="loading" v-if="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <!-- 票务列表 -->
+    <template v-else>
+      <div class="count-info" v-if="total > 0">
+        共找到 <strong>{{ total }}</strong> 个活动
+      </div>
+      <div class="ticket-grid" v-if="items.length > 0">
+        <div class="ticket-card" v-for="item in items" :key="item.id" @click="goDetail(item.id)">
+          <div class="ticket-img">
+            <img v-if="item.image" :src="item.image" style="width:100%;height:100%;object-fit:cover;" alt="">
+            <span v-else>{{ getEmoji(item.id) }}</span>
+            <span v-if="item.isAD" class="ad-badge">推广</span>
+          </div>
+          <div class="ticket-info">
+            <div class="ticket-name" v-html="item.name"></div>
+            <div class="ticket-meta">
+              <span class="tag tag-primary" v-if="item.category">{{ item.category }}</span>
+              <span class="tag tag-success" v-if="item.brand">{{ item.brand }}</span>
+              <span>已售 {{ item.sold || 0 }}</span>
+            </div>
+            <div class="ticket-footer">
+              <span class="ticket-price"><span class="unit">¥</span>{{ formatPrice(item.price) }}</span>
+              <span class="ticket-stock" :class="{low: item.stock <= 10}">
+                库存 {{ item.stock || 0 }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 空状态 -->
+      <div class="empty-state" v-else>
+        <div class="icon">🔍</div>
+        <p>暂无相关活动，换个关键词试试吧</p>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination" v-if="totalPages > 1">
+        <button :disabled="pageNo <= 1" @click="goPage(pageNo - 1)">上一页</button>
+        <button v-for="p in visiblePages" :class="{active: p === pageNo}" @click="goPage(p)">{{ p }}</button>
+        <button :disabled="pageNo >= totalPages" @click="goPage(pageNo + 1)">下一页</button>
+      </div>
+    </template>
+  </div>
+
+  <!-- 底部 -->
+  <footer class="mai-footer">
+    <div class="mai-footer-inner">
+      <div class="mai-footer-features">
+        <div class="mai-feature-item">
+          <span class="mai-feature-icon">🔒</span>
+          <div><h4>安全可靠</h4><p>交易全程加密保障</p></div>
+        </div>
+        <div class="mai-feature-item">
+          <span class="mai-feature-icon">⚡</span>
+          <div><h4>极速抢票</h4><p>毫秒级响应速度</p></div>
+        </div>
+        <div class="mai-feature-item">
+          <span class="mai-feature-icon">🎫</span>
+          <div><h4>正品保障</h4><p>100%正品票务</p></div>
+        </div>
+        <div class="mai-feature-item">
+          <span class="mai-feature-icon">💬</span>
+          <div><h4>客服支持</h4><p>7×24小时在线</p></div>
+        </div>
+        <div class="mai-feature-item">
+          <span class="mai-feature-icon">🔄</span>
+          <div><h4>无忧退换</h4><p>支持随时退票</p></div>
+        </div>
+      </div>
+      <div class="mai-footer-bottom">© 2024 MaiMai抢票系统 - 让每一张票都有归属</div>
+    </div>
+  </footer>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    userInfo: null,
+    keyword: '',
+    filterCategory: '',
+    filterBrand: '',
+    sortBy: '',
+    sortAsc: false,
+    items: [],
+    total: 0,
+    totalPages: 0,
+    pageNo: 1,
+    pageSize: 20,
+    loading: false,
+    cartCount: 0,
+    categories: [],
+    brands: []
+  },
+  created() {
+    this.userInfo = util.getUserInfo();
+    this.loadItems();
+    this.loadCartCount();
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    getEmoji(id) {
+      const emojis = ['🎵', '🎸', '🎹', '🎤', '🎭', '🎪', '🎬', '🎯', '🎮', '🎲', '🎰', '🎳', '🎾', '⚽', '🏀', '🏈'];
+      return emojis[id % emojis.length];
+    },
+    getGradient(id) {
+      const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+        'linear-gradient(135deg, #fa709a, #fee140)',
+        'linear-gradient(135deg, #a18cd1, #fbc2eb)',
+        'linear-gradient(135deg, #fccb90, #d57eeb)',
+        'linear-gradient(135deg, #e0c3fc, #8ec5fc)',
+      ];
+      return gradients[id % gradients.length];
+    },
+    async loadItems() {
+      this.loading = true;
+      try {
+        const params = {
+          pageNo: this.pageNo,
+          pageSize: this.pageSize
+        };
+        if (this.sortBy) {
+          params.sortBy = this.sortBy;
+          params.isAsc = this.sortAsc;
+        }
+        if (this.keyword) params.key = this.keyword;
+        if (this.filterCategory) params.category = this.filterCategory;
+        if (this.filterBrand) params.brand = this.filterBrand;
+
+        const res = await api.search.list(params);
+        const data = res.data;
+        if (data && data.list) {
+          this.items = data.list;
+          this.total = data.total || 0;
+          this.totalPages = data.pages || 1;
+        }
+        // 加载过滤器选项
+        await this.loadFilters();
+      } catch (e) {
+        console.error('加载失败:', e);
+        util.toast('加载活动列表失败', 'error');
+      } finally {
+        this.loading = false;
+      }
+    },
+    async loadFilters() {
+      try {
+        const query = {};
+        if (this.keyword) query.key = this.keyword;
+        if (this.filterCategory) query.category = this.filterCategory;
+        if (this.filterBrand) query.brand = this.filterBrand;
+        const res = await api.search.filters(query);
+        const data = res.data;
+        if (data) {
+          if (data.category) this.categories = data.category;
+          if (data.brand) this.brands = data.brand;
+        }
+      } catch (e) {
+        console.error('加载过滤器选项失败:', e);
+      }
+    },
+    async loadCartCount() {
+      if (!this.userInfo) return;
+      try {
+        const res = await axios.get('/api/carts');
+        const data = res.data;
+        if (Array.isArray(data)) {
+          this.cartCount = data.length;
+        }
+      } catch (e) {}
+    },
+    search() {
+      this.pageNo = 1;
+      this.loadItems();
+    },
+    goPage(p) {
+      this.pageNo = p;
+      this.loadItems();
+      window.scrollTo({ top: 400, behavior: 'smooth' });
+    },
+    goDetail(id) {
+      location.href = '/detail.html?id=' + id;
+    },
+    goCart() {
+      location.href = '/cart.html';
+    },
+    logout() {
+      util.logout();
+    },
+    reload() {
+      location.reload();
+    }
+  },
+  computed: {
+    visiblePages() {
+      const pages = [];
+      const start = Math.max(1, this.pageNo - 2);
+      const end = Math.min(this.totalPages, this.pageNo + 2);
+      for (let i = start; i <= end; i++) pages.push(i);
+      return pages;
+    }
+  }
+});
+</script>
+</body>
+</html>

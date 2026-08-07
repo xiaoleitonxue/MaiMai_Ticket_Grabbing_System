@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>MaiMai抢票系统 - 演出搜索</title>
+  <link href="./css/main.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/element.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    #app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 32px;
+    }
+    .nav-bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .nav-bar a {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .nav-bar a:hover,
+    .nav-bar a.active {
+      color: #fff;
+    }
+    #app h1 {
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      margin: 0 0 24px 0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #app h1::before {
+      content: '🔍';
+      font-size: 28px;
+    }
+    .search-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .search-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      align-items: flex-end;
+    }
+    .search-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .search-item label {
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .search-item .el-input__inner {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #e0e0e0;
+      border-radius: 8px;
+    }
+    .search-item .el-input__inner:focus {
+      border-color: #6C5CE7;
+    }
+    .search-item .el-input__inner::placeholder {
+      color: rgba(255,255,255,0.3);
+    }
+    .price-range {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .price-range span {
+      color: rgba(255,255,255,0.4);
+      font-size: 13px;
+    }
+    .search-actions {
+      display: flex;
+      gap: 12px;
+      align-items: flex-end;
+      padding-bottom: 1px;
+    }
+    .result-info {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .result-info span {
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+    }
+    .el-table {
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .el-table th {
+      background: rgba(255,255,255,0.06) !important;
+      color: #e0e0e0 !important;
+      font-weight: 700;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    .el-table td {
+      border-color: rgba(255,255,255,0.05) !important;
+      color: #ccc !important;
+    }
+    .el-table tr {
+      background: transparent !important;
+    }
+    .el-table tr:hover td {
+      background: rgba(108, 92, 231, 0.1) !important;
+    }
+    .el-table::before { display: none; }
+    .el-pagination {
+      padding: 16px 0 0;
+    }
+    .el-pagination button,
+    .el-pagination .el-pager li {
+      background: rgba(255,255,255,0.06) !important;
+      color: #ccc !important;
+      border-radius: 8px;
+    }
+    .el-pagination .el-pager li.active {
+      background: #6C5CE7 !important;
+      color: #fff !important;
+    }
+    .el-button--primary {
+      background: linear-gradient(135deg, #6C5CE7, #5A4BD1) !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    .el-button--default {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #ccc;
+      border-radius: 8px;
+    }
+    .stock-low { color: #FF6B6B; font-weight: 600; }
+    .stock-ok { color: #00D2A0; }
+    .tag-ad {
+      display: inline-block;
+      background: rgba(255,107,107,0.2);
+      color: #FF6B6B;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
+    .table-column-name em {
+      color: #ef4444; font-style: normal;
+    }
+    @media (max-width: 768px) {
+      .search-row { flex-direction: column; }
+      .search-item { width: 100%; }
+      .price-range { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="nav-bar">
+    <a href="/index.html">首页</a>
+    <a href="/items.html">演出管理</a>
+    <a href="/orders.html">订单管理</a>
+    <a href="/search.html" class="active">演出搜索</a>
+  </div>
+
+  <h1>演出搜索</h1>
+
+  <div class="search-card">
+    <div class="search-row">
+      <div class="search-item" style="width:200px;">
+        <label>搜索关键词</label>
+        <el-input v-model="queryParams.key" placeholder="输入演出名称" clearable @keyup.enter.native="handleSearch"></el-input>
+      </div>
+      <div class="search-item" style="width:160px;">
+        <label>演出分类</label>
+        <el-input v-model="queryParams.category" placeholder="如：演唱会" clearable @keyup.enter.native="handleSearch"></el-input>
+      </div>
+      <div class="search-item" style="width:160px;">
+        <label>品牌/主办方</label>
+        <el-input v-model="queryParams.brand" placeholder="如：大麦" clearable @keyup.enter.native="handleSearch"></el-input>
+      </div>
+      <div class="search-item">
+        <label>价格范围（分）</label>
+        <div class="price-range">
+          <el-input v-model="queryParams.minPrice" placeholder="最低价" style="width:110px;" clearable></el-input>
+          <span>—</span>
+          <el-input v-model="queryParams.maxPrice" placeholder="最高价" style="width:110px;" clearable></el-input>
+        </div>
+      </div>
+      <div class="search-actions">
+        <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+        <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-info" v-if="searched">
+    <span>共找到 <strong style="color:#6C5CE7;">{{ total }}</strong> 条结果</span>
+    <el-pagination
+        v-show="total > pageSize"
+        @current-change="handlePageChange"
+        :current-page="currentPage"
+        background
+        :page-size="pageSize"
+        :page-sizes="pageSizes"
+        @size-change="handleSizeChange"
+        layout="prev, pager, next, total, sizes"
+        :total="total">
+    </el-pagination>
+  </div>
+
+  <el-table
+      :data="items"
+      border
+      style="width: 100%"
+      v-loading="loading"
+      element-loading-text="搜索中..."
+      element-loading-background="rgba(0,0,0,0.5)">
+    <el-table-column prop="id" label="ID" width="100" align="center"></el-table-column>
+    <el-table-column prop="name" label="演出名称" min-width="200">
+      <template slot-scope="scope">
+        <span class="table-column-name" v-html="scope.row.name"></span>
+        <span class="tag-ad" v-if="scope.row.isAD">推广</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="category" label="分类" width="120" align="center"></el-table-column>
+    <el-table-column prop="brand" label="主办方" width="120" align="center"></el-table-column>
+    <el-table-column prop="price" label="票价(分)" width="110" align="center">
+      <template slot-scope="scope">
+        ¥{{ scope.row.price }}
+      </template>
+    </el-table-column>
+    <el-table-column prop="stock" label="库存" width="90" align="center">
+      <template slot-scope="scope">
+        <span :class="scope.row.stock <= 10 ? 'stock-low' : 'stock-ok'">{{ scope.row.stock }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="sold" label="销量" width="90" align="center"></el-table-column>
+    <el-table-column prop="commentCount" label="评论数" width="90" align="center"></el-table-column>
+    <el-table-column label="状态" width="90" align="center">
+      <template slot-scope="scope">
+        <el-tag v-if="scope.row.status === 1" type="success" size="small">正常</el-tag>
+        <el-tag v-else-if="scope.row.status === 2" type="warning" size="small">下架</el-tag>
+        <el-tag v-else type="danger" size="small">删除</el-tag>
+      </template>
+    </el-table-column>
+    <el-table-column prop="updateTime" label="更新时间" width="170" align="center">
+      <template slot-scope="scope">
+        {{ formatTime(scope.row.updateTime) }}
+      </template>
+    </el-table-column>
+    <el-table-column label="海报" width="80" align="center">
+      <template slot-scope="scope">
+        <el-image
+            v-if="scope.row.image"
+            style="width: 50px; height: 50px; border-radius: 8px;"
+            :src="scope.row.image"
+            fit="fill"></el-image>
+        <span v-else style="color:rgba(255,255,255,0.3);">无</span>
+      </template>
+    </el-table-column>
+  </el-table>
+
+  <div style="text-align:center;padding:40px 0;" v-if="searched && items.length === 0 && !loading">
+    <p style="color:rgba(255,255,255,0.4);font-size:15px;">未找到匹配的演出，请尝试其他搜索条件</p>
+  </div>
+</div>
+
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./js/element.js"></script>
+<script>
+  axios.defaults.baseURL = "/api";
+  axios.defaults.timeout = 5000;
+  axios.interceptors.request.use(
+    function(config) {
+      config.headers['authorization'] = 'admin';
+      return config;
+    },
+    function(error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  );
+
+  new Vue({
+    el: "#app",
+    data: {
+      queryParams: {
+        key: '',
+        category: '',
+        brand: '',
+        minPrice: '',
+        maxPrice: ''
+      },
+      items: [],
+      total: 0,
+      currentPage: 1,
+      pageSize: 10,
+      pageSizes: [5, 10, 20, 50, 100],
+      loading: false,
+      searched: false
+    },
+    methods: {
+      handleSearch: function() {
+        this.currentPage = 1;
+        this.doSearch();
+      },
+      handleReset: function() {
+        this.queryParams = {
+          key: '',
+          category: '',
+          brand: '',
+          minPrice: '',
+          maxPrice: ''
+        };
+        this.currentPage = 1;
+        this.items = [];
+        this.total = 0;
+        this.searched = false;
+      },
+      handlePageChange: function(page) {
+        this.currentPage = page;
+        this.doSearch();
+      },
+      handleSizeChange: function(size) {
+        this.pageSize = size;
+        this.currentPage = 1;
+        this.doSearch();
+      },
+      doSearch: function() {
+        this.loading = true;
+        this.searched = true;
+        var params = {
+          pageNo: this.currentPage,
+          pageSize: this.pageSize
+        };
+        if (this.queryParams.key) {
+          params.key = this.queryParams.key;
+        }
+        if (this.queryParams.category) {
+          params.category = this.queryParams.category;
+        }
+        if (this.queryParams.brand) {
+          params.brand = this.queryParams.brand;
+        }
+        if (this.queryParams.minPrice !== '' && this.queryParams.minPrice !== null) {
+          params.minPrice = this.queryParams.minPrice;
+        }
+        if (this.queryParams.maxPrice !== '' && this.queryParams.maxPrice !== null) {
+          params.maxPrice = this.queryParams.maxPrice;
+        }
+        var self = this;
+        axios.get("/search/list", { params: params })
+          .then(function(resp) {
+            self.items = resp.data.list || [];
+            self.total = parseInt(resp.data.total) || 0;
+          })
+          .catch(function(err) {
+            console.log(err);
+            self.$message.error('搜索失败，请稍后重试');
+          })
+          .finally(function() {
+            self.loading = false;
+          });
+      },
+      formatTime: function(timeStr) {
+        if (!timeStr) return '-';
+        var d = new Date(timeStr);
+        var pad = function(n) { return n < 10 ? '0' + n : n; };
+        return d.getFullYear() + '-' +
+          pad(d.getMonth() + 1) + '-' +
+          pad(d.getDate()) + ' ' +
+          pad(d.getHours()) + ':' +
+          pad(d.getMinutes()) + ':' +
+          pad(d.getSeconds());
+      }
+    }
+  });
+</script>
+</body>
+</html>

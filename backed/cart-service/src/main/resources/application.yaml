@@ -1,0 +1,21 @@
+server:
+  port: 8082
+feign:
+  okhttp:
+    enabled: true
+  sentinel:
+    enabled: true
+mai:
+  db:
+    database: mai-cart
+  swagger:
+    title: "购物车服务接口文档"
+    package: com.mai.cart.controller
+spring:
+  cloud:
+    sentinel:
+      transport:
+        dashboard: localhost:8090
+      http-method-specify: true
+seata:
+  data-source-proxy-mode: AT

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>MaiMai抢票系统 - 管理后台</title>
+  <link href="./css/main.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/element.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    #app {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 32px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .header h1 {
+      color: #fff;
+      font-size: 32px;
+      font-weight: 800;
+      margin: 0 0 8px 0;
+    }
+    .header p {
+      color: rgba(255,255,255,0.5);
+      font-size: 14px;
+      margin: 0;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 40px 32px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: block;
+    }
+    .card:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: rgba(255,255,255,0.2);
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    }
+    .card-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    .card h2 {
+      color: #fff;
+      font-size: 20px;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+    }
+    .card p {
+      color: rgba(255,255,255,0.5);
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      .cards {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="header">
+    <h1>🎫 MaiMai 管理后台</h1>
+    <p>演出活动与用户数据管理</p>
+  </div>
+  <div class="cards">
+    <a href="/items.html" class="card">
+      <div class="card-icon">🎵</div>
+      <h2>演出管理</h2>
+      <p>查看、新增、编辑和删除演出活动，管理活动库存与上下架状态</p>
+    </a>
+    <a href="/orders.html" class="card">
+      <div class="card-icon">📦</div>
+      <h2>订单管理</h2>
+      <p>查看所有用户的订单信息，了解订单状态与支付详情</p>
+    </a>
+    <a href="/search.html" class="card">
+      <div class="card-icon">🔍</div>
+      <h2>演出搜索</h2>
+      <p>按关键词、分类、主办方、价格范围等多条件灵活搜索演出</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>

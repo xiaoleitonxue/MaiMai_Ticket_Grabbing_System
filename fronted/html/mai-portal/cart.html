@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>选票清单 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .cart-page { background: var(--gray-100); min-height: 100vh; }
+    .cart-header {
+      background: var(--dark); padding: 0;
+    }
+    .cart-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; height: 48px;
+      font-size: 13px;
+    }
+    .cart-header-inner a { color: var(--gray-400); }
+    .cart-header-inner a:hover { color: var(--accent); }
+    .cart-header-inner span { color: var(--gray-500); margin: 0 8px; }
+
+    .cart-container { max-width: 1200px; margin: 0 auto; padding: 30px 20px 60px; }
+    .cart-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; display: flex; align-items: center; gap: 12px; }
+
+    .cart-table { width: 100%; background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+    .cart-table-header {
+      display: grid; grid-template-columns: 40px 1fr 120px 120px 120px 80px;
+      padding: 16px 20px; background: var(--gray-100); font-size: 13px;
+      font-weight: 600; color: var(--gray-600);
+    }
+    .cart-table-row {
+      display: grid; grid-template-columns: 40px 1fr 120px 120px 120px 80px;
+      padding: 16px 20px; align-items: center; border-bottom: 1px solid var(--gray-100);
+      transition: background var(--transition);
+    }
+    .cart-table-row:hover { background: var(--gray-100); }
+    .cart-table-row:last-child { border-bottom: none; }
+    .cart-item-info { display: flex; align-items: center; gap: 12px; }
+    .cart-item-img {
+      width: 60px; height: 60px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .cart-item-name { font-size: 14px; font-weight: 600; }
+    .cart-item-spec { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .cart-qty { display: flex; align-items: center; gap: 4px; }
+    .cart-qty button {
+      width: 28px; height: 28px; border: 1px solid var(--gray-200); border-radius: 6px;
+      background: var(--white); cursor: pointer; font-size: 16px; display: flex;
+      align-items: center; justify-content: center; transition: all var(--transition);
+    }
+    .cart-qty button:hover { border-color: var(--primary); color: var(--primary); }
+    .cart-qty span { width: 36px; text-align: center; font-weight: 600; }
+
+    .cart-footer {
+      background: var(--white); border-radius: 12px; padding: 20px 24px;
+      margin-top: 20px; display: flex; align-items: center; justify-content: space-between;
+      box-shadow: var(--shadow);
+    }
+    .cart-footer-left { display: flex; align-items: center; gap: 16px; }
+    .cart-footer-right { display: flex; align-items: center; gap: 16px; }
+    .cart-total { font-size: 14px; color: var(--gray-600); }
+    .cart-total strong { font-size: 24px; color: var(--danger); }
+
+    @media (max-width: 768px) {
+      .cart-table-header, .cart-table-row {
+        grid-template-columns: 30px 1fr 80px 80px;
+        font-size: 12px;
+      }
+      .cart-table-header > *:nth-child(4),
+      .cart-table-row > *:nth-child(4),
+      .cart-table-header > *:nth-child(6),
+      .cart-table-row > *:nth-child(6) { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="cart-header">
+    <div class="cart-header-inner">
+      <a href="/index.html">首页</a>
+      <span>/</span>
+      <span style="color:var(--gray-300);">选票清单</span>
+      <span style="flex:1"></span>
+      <template v-if="userInfo">
+        <span style="color:var(--accent);">{{ userInfo.username }}</span>
+        <span style="color:var(--gray-500);margin:0 8px;">|</span>
+        <a @click="logout" style="cursor:pointer;">退出</a>
+      </template>
+      <template v-else>
+        <a href="/login.html">请登录</a>
+      </template>
+    </div>
+  </div>
+
+  <div class="cart-container">
+    <div class="cart-title">
+      🛒 我的选票清单
+      <span style="font-size:14px;color:var(--gray-500);font-weight:400;">（{{ cartItems.length }} 个活动）</span>
+    </div>
+
+    <div class="loading" v-if="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <template v-else-if="cartItems.length > 0">
+      <div class="cart-table">
+        <div class="cart-table-header">
+          <div></div>
+          <div>活动信息</div>
+          <div>单价</div>
+          <div>数量</div>
+          <div>小计</div>
+          <div>操作</div>
+        </div>
+        <div class="cart-table-row" v-for="item in cartItems" :key="item.id">
+          <div style="text-align:center;">
+            <input type="checkbox" :checked="isSelected(item.id)" @change="toggleSelect(item.id)">
+          </div>
+          <div class="cart-item-info">
+            <div class="cart-item-img">
+              <img v-if="item.image" :src="item.image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="">
+              <span v-else>{{ getEmoji(item.itemId) }}</span>
+            </div>
+            <div>
+              <div class="cart-item-name">{{ item.name }}</div>
+              <div class="cart-item-spec" v-if="item.spec">{{ item.spec }}</div>
+            </div>
+          </div>
+          <div class="price">¥{{ formatPrice(item.price) }}</div>
+          <div class="cart-qty">
+            <button @click="changeQty(item, -1)">−</button>
+            <input type="number" v-model.number="item.num" @change="onCartQtyChange(item)" min="1" style="width:50px;text-align:center;border:1px solid var(--gray-200);border-radius:6px;height:28px;font-size:14px;font-weight:600;outline:none;margin:0 2px;">
+            <button @click="changeQty(item, 1)">+</button>
+          </div>
+          <div style="font-weight:700;color:var(--danger);">¥{{ formatPrice(item.price * item.num) }}</div>
+          <div>
+            <button class="btn btn-sm btn-outline" @click="removeItem(item.id)" style="color:var(--danger);border-color:var(--danger);">删除</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="cart-footer">
+        <div class="cart-footer-left">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--gray-600);">
+            <input type="checkbox" :checked="isAllSelected" @change="toggleAll">
+            全选
+          </label>
+          <button class="btn btn-sm btn-outline" @click="removeSelected" :disabled="selectedIds.length === 0">
+            删除选中
+          </button>
+        </div>
+        <div class="cart-footer-right">
+          <span class="cart-total">
+            已选 <strong>{{ selectedIds.length }}</strong> 项，
+            合计：<strong>¥{{ formatPrice(totalPrice) }}</strong>
+          </span>
+          <button class="btn btn-danger btn-lg" @click="goCheckout" :disabled="selectedIds.length === 0">
+            去结算
+          </button>
+        </div>
+      </div>
+    </template>
+
+    <div class="empty-state" v-else>
+      <div class="icon">🛒</div>
+      <p>选票清单还是空的，快去首页看看吧！</p>
+      <a href="/index.html" class="btn btn-primary">去逛逛</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/axios.min.js?v=3"></script>
+<script src="js/vue.js?v=3"></script>
+<script src="js/common.js?v=3"></script>
+<script src="js/api.js?v=3"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    userInfo: null,
+    cartItems: [],
+    selectedIds: [],
+    loading: false
+  },
+  created() {
+    this.userInfo = util.getUserInfo();
+    if (!this.userInfo) {
+      sessionStorage.setItem('login-redirect', location.href);
+      location.href = '/login.html';
+      return;
+    }
+    this.loadCart().then(() => {
+      var selectItemId = util.getUrlParam('selectItemId');
+      if (selectItemId) {
+        var cartItem = this.cartItems.find(function(i) { return String(i.itemId) === String(selectItemId); });
+        if (cartItem && !this.selectedIds.includes(cartItem.id)) {
+          this.selectedIds.push(cartItem.id);
+        }
+      }
+    });
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    getEmoji(id) {
+      const emojis = ['🎵', '🎸', '🎹', '🎤', '🎭', '🎪', '🎬', '🎯', '🎮', '🎲'];
+      return emojis[id % emojis.length];
+    },
+    getGradient(id) {
+      const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+      ];
+      return gradients[id % gradients.length];
+    },
+    async loadCart() {
+      this.loading = true;
+      try {
+        const res = await axios.get('/api/carts');
+        const data = Array.isArray(res.data) ? res.data : [];
+        this.cartItems = data.map(function(item) {
+          if (!item.num || item.num < 1) {
+            item.num = 1;
+          }
+          return item;
+        });
+      } catch (e) {
+        util.toast('加载清单失败', 'error');
+      } finally {
+        this.loading = false;
+      }
+    },
+    isSelected(id) {
+      return this.selectedIds.includes(id);
+    },
+    toggleSelect(id) {
+      const idx = this.selectedIds.indexOf(id);
+      if (idx > -1) {
+        this.selectedIds.splice(idx, 1);
+      } else {
+        this.selectedIds.push(id);
+      }
+    },
+    toggleAll() {
+      if (this.isAllSelected) {
+        this.selectedIds = [];
+      } else {
+        this.selectedIds = this.cartItems.map(i => i.id);
+      }
+    },
+    async changeQty(item, delta) {
+      if (!item.num || item.num < 1) item.num = 1;
+      const newNum = item.num + delta;
+      if (newNum < 1) return;
+      item.num = newNum;
+      try {
+        await api.cart.update({ id: item.id, num: newNum });
+      } catch (e) {
+        item.num -= delta;
+        util.toast('更新失败', 'error');
+      }
+    },
+    async onCartQtyChange(item) {
+      if (!item.num || item.num < 1) {
+        item.num = 1;
+      }
+      try {
+        await api.cart.update({ id: item.id, num: item.num });
+      } catch (e) {
+        util.toast('更新失败', 'error');
+      }
+    },
+    async removeItem(id) {
+      const ok = await util.confirm('确定要移除这个活动吗？');
+      if (!ok) return;
+      try {
+        await api.cart.delete(id);
+        this.cartItems = this.cartItems.filter(i => i.id !== id);
+        this.selectedIds = this.selectedIds.filter(sid => sid !== id);
+        util.toast('已移除', 'success');
+      } catch (e) {
+        util.toast('移除失败', 'error');
+      }
+    },
+    async removeSelected() {
+      if (this.selectedIds.length === 0) return;
+      const ok = await util.confirm('确定要删除选中的 ' + this.selectedIds.length + ' 项吗？');
+      if (!ok) return;
+      try {
+        var itemIds = this.cartItems
+          .filter(function(i) { return this.selectedIds.includes(i.id); }.bind(this))
+          .map(function(i) { return i.itemId; });
+        await api.cart.deleteByIds(itemIds);
+        this.cartItems = this.cartItems.filter(i => !this.selectedIds.includes(i.id));
+        this.selectedIds = [];
+        util.toast('已删除', 'success');
+      } catch (e) {
+        util.toast('删除失败', 'error');
+      }
+    },
+    goCheckout() {
+      if (this.selectedIds.length === 0) {
+        util.toast('请先选择要结算的活动', 'warning');
+        return;
+      }
+      const selected = this.cartItems.filter(i => this.selectedIds.includes(i.id));
+      util.store.set('checkout-items', selected);
+      location.href = '/order-confirm.html';
+    },
+    logout() {
+      util.logout();
+    }
+  },
+  computed: {
+    isAllSelected() {
+      return this.cartItems.length > 0 && this.selectedIds.length === this.cartItems.length;
+    },
+    totalPrice() {
+      return this.cartItems
+        .filter(i => this.selectedIds.includes(i.id))
+        .reduce((sum, i) => sum + i.price * i.num, 0);
+    }
+  }
+});
+</script>
+</body>
+</html>

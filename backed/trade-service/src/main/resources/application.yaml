@@ -1,0 +1,13 @@
+server:
+  port: 8084
+feign:
+  okhttp:
+    enabled: true
+mai:
+  db:
+    database: mai-trade
+  swagger:
+    title: "交易服务接口文档"
+    package: com.mai.trade.controller
+seata:
+  data-source-proxy-mode: AT

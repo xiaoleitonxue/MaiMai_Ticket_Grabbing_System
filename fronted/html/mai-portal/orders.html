@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>我的订单 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .orders-page { background: var(--gray-100); min-height: 100vh; }
+    .orders-header {
+      background: var(--dark); padding: 0;
+    }
+    .orders-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; height: 48px; font-size: 13px;
+    }
+    .orders-header-inner a { color: var(--gray-400); }
+    .orders-header-inner a:hover { color: var(--accent); }
+    .orders-header-inner span { color: var(--gray-500); margin: 0 8px; }
+
+    .orders-container { max-width: 1000px; margin: 0 auto; padding: 30px 20px 60px; }
+    .orders-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+
+    .order-card {
+      background: var(--white); border-radius: 12px; padding: 24px;
+      margin-bottom: 16px; box-shadow: var(--shadow);
+    }
+    .order-card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: 16px; border-bottom: 1px solid var(--gray-100);
+      margin-bottom: 16px;
+    }
+    .order-card-no { font-size: 14px; color: var(--gray-500); }
+    .order-card-no strong { color: var(--dark); }
+    .order-card-items {
+      border-bottom: 1px solid var(--gray-100);
+      padding-bottom: 12px; margin-bottom: 12px;
+    }
+    .order-item-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 0;
+    }
+    .order-item-row + .order-item-row {
+      border-top: 1px dashed var(--gray-100);
+    }
+    .order-item-img {
+      width: 60px; height: 60px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0; overflow: hidden;
+    }
+    .order-item-img img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .order-item-info { flex: 1; }
+    .order-item-name { font-size: 14px; font-weight: 700; color: var(--dark); }
+    .order-item-meta { font-size: 12px; color: var(--gray-500); margin-top: 2px; }
+    .order-item-price { font-size: 14px; font-weight: 700; color: var(--danger); text-align: right; white-space: nowrap; }
+    .order-card-footer {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; color: var(--gray-500);
+    }
+    .order-card-footer .meta-item { margin-right: 20px; }
+    .order-card-footer .meta-item strong { color: var(--dark); }
+    .order-card-total { font-size: 18px; font-weight: 800; color: var(--danger); }
+
+    .status-pending { color: var(--warning); }
+    .status-paid { color: var(--success); }
+    .status-shipped { color: var(--primary); }
+    .status-done { color: var(--success); }
+    .status-cancel { color: var(--gray-400); }
+    .status-finish { color: var(--success); }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="orders-header">
+    <div class="orders-header-inner">
+      <a href="/index.html">首页</a><span>/</span>
+      <span style="color:var(--gray-300);">我的订单</span>
+      <span style="flex:1"></span>
+      <template v-if="userInfo">
+        <span style="color:var(--accent);">{{ userInfo.username }}</span>
+        <span style="color:var(--gray-500);margin:0 8px;">|</span>
+        <a @click="logout" style="cursor:pointer;">退出</a>
+      </template>
+    </div>
+  </div>
+
+  <div class="orders-container">
+    <div class="orders-title">📦 我的订单</div>
+
+    <div class="loading" v-if="loading">
+      <div class="spinner"></div>
+    </div>
+
+    <template v-else-if="orders.length > 0">
+      <div class="order-card" v-for="order in orders" :key="order.id">
+        <div class="order-card-header">
+          <div class="order-card-no">
+            订单号：<strong>{{ order.id }}</strong>
+            <span style="margin-left:16px;">{{ formatDate(order.createTime) }}</span>
+          </div>
+          <span :class="getOrderStatusClass(order.status)" style="font-weight:700;">
+            {{ getOrderStatusText(order.status) }}
+          </span>
+        </div>
+
+        <div class="order-card-items" v-if="order.details && order.details.length > 0">
+          <div class="order-item-row" v-for="(detail, idx) in order.details" :key="idx">
+            <div class="order-item-img" :style="{background: getGradient(detail.itemId || 0)}">
+              <img v-if="detail.image" :src="detail.image" alt="">
+              <span v-else>{{ getEmoji(detail.itemId || 0) }}</span>
+            </div>
+            <div class="order-item-info">
+              <div class="order-item-name">{{ detail.name }}</div>
+              <div class="order-item-meta">
+                演出ID：{{ detail.itemId }} | 数量：{{ detail.num }} 张
+              </div>
+            </div>
+            <div class="order-item-price">
+              ¥{{ formatPrice(detail.price) }} × {{ detail.num }}
+            </div>
+          </div>
+        </div>
+
+        <div class="order-card-footer">
+          <div>
+            <span class="meta-item">
+              支付方式：<strong>{{ getPaymentTypeText(order.paymentType) }}</strong>
+            </span>
+            <span class="meta-item" v-if="order.payTime">
+              支付时间：<strong>{{ formatDate(order.payTime) }}</strong>
+            </span>
+          </div>
+          <div class="order-card-total">
+            实付：¥{{ formatPrice(order.totalFee) }}
+          </div>
+        </div>
+      </div>
+    </template>
+
+    <div class="empty-state" v-else>
+      <div class="icon">📦</div>
+      <p>还没有订单，快去抢票吧！</p>
+      <a href="/index.html" class="btn btn-primary">去逛逛</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    userInfo: null,
+    orders: [],
+    loading: false
+  },
+  created() {
+    this.userInfo = util.getUserInfo();
+    if (!this.userInfo) {
+      sessionStorage.setItem('login-redirect', location.href);
+      location.href = '/login.html';
+      return;
+    }
+    this.loadOrders();
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    formatDate: util.formatDate,
+    getOrderStatusText: util.getOrderStatusText,
+    getOrderStatusClass: util.getOrderStatusClass,
+    getPaymentTypeText: util.getPaymentTypeText,
+    getEmoji(id) {
+      const emojis = ['🎵', '🎸', '🎹', '🎤', '🎭', '🎪', '🎬', '🎯', '🎮', '🎲'];
+      return emojis[id % emojis.length];
+    },
+    getGradient(id) {
+      const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+      ];
+      return gradients[id % gradients.length];
+    },
+    async loadOrders() {
+      this.loading = true;
+      try {
+        const res = await api.order.list();
+        this.orders = Array.isArray(res.data) ? res.data : [];
+      } catch (e) {
+        console.error('加载订单失败:', e);
+        util.toast('加载订单失败', 'error');
+      } finally {
+        this.loading = false;
+      }
+    },
+    logout() {
+      util.logout();
+    }
+  }
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+server:
+  port: 8083
+feign:
+  okhttp:
+    enabled: true
+mai:
+  db:
+    database: mai-user
+  swagger:
+    title: "用户服务接口文档"
+    package: com.mai.user.controller
+  jwt:
+    location: classpath:mai.jks
+    alias: mai
+    password: mai123
+    tokenTTL: 30m
+  auth:
+    excludePaths:
+      - /search/**
+      - /users/login
+      - /items/**
+      - /hi
+# keytool -genkeypair -alias mai -keyalg RSA -keypass mai123 -keystore mai.jks -storepass mai123

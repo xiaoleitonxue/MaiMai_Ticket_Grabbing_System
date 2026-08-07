@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>确认订单 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .confirm-page { background: var(--gray-100); min-height: 100vh; }
+    .confirm-header {
+      background: var(--dark); padding: 0;
+    }
+    .confirm-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 0 20px;
+      display: flex; align-items: center; height: 48px; font-size: 13px;
+    }
+    .confirm-header-inner a { color: var(--gray-400); }
+    .confirm-header-inner a:hover { color: var(--accent); }
+    .confirm-header-inner span { color: var(--gray-500); margin: 0 8px; }
+
+    .confirm-container { max-width: 900px; margin: 0 auto; padding: 30px 20px 60px; }
+    .confirm-title { font-size: 24px; font-weight: 800; margin-bottom: 24px; }
+
+    .section { background: var(--white); border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: var(--shadow); }
+    .section-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid var(--gray-100); display: flex; align-items: center; gap: 8px; }
+
+    .address-card {
+      padding: 16px; border: 2px solid var(--gray-200); border-radius: 8px;
+      cursor: pointer; transition: all var(--transition); margin-bottom: 8px;
+    }
+    .address-card:hover { border-color: var(--primary); }
+    .address-card.selected { border-color: var(--primary); background: rgba(99,102,241,0.04); }
+    .address-card .name { font-weight: 700; font-size: 15px; }
+    .address-card .phone { color: var(--gray-500); margin-left: 12px; }
+    .address-card .addr { color: var(--gray-500); font-size: 13px; margin-top: 4px; }
+
+    .confirm-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 0;
+      border-bottom: 1px solid var(--gray-100);
+    }
+    .confirm-item:last-child { border-bottom: none; }
+    .confirm-item-img {
+      width: 50px; height: 50px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .confirm-item-name { flex: 1; font-size: 14px; font-weight: 600; }
+    .confirm-item-price { font-weight: 700; color: var(--danger); text-align: right; }
+
+    .confirm-total {
+      text-align: right; padding-top: 16px; font-size: 16px; color: var(--gray-600);
+    }
+    .confirm-total strong { font-size: 28px; color: var(--danger); }
+
+    .pay-type-options { display: flex; gap: 12px; }
+    .pay-type-option {
+      flex: 1; padding: 16px; border: 2px solid var(--gray-200); border-radius: 8px;
+      text-align: center; cursor: pointer; transition: all var(--transition);
+    }
+    .pay-type-option:hover { border-color: var(--primary); }
+    .pay-type-option.selected { border-color: var(--primary); background: rgba(99,102,241,0.04); }
+    .pay-type-option .icon { font-size: 28px; margin-bottom: 8px; }
+    .pay-type-option .name { font-weight: 600; font-size: 14px; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="confirm-header">
+    <div class="confirm-header-inner">
+      <a href="/index.html">首页</a><span>/</span>
+      <a href="/cart.html">选票清单</a><span>/</span>
+      <span style="color:var(--gray-300);">确认订单</span>
+    </div>
+  </div>
+
+  <div class="confirm-container">
+    <div class="confirm-title">📋 确认订单</div>
+
+    <!-- 收货地址 -->
+    <div class="section">
+      <div class="section-title">📍 收货地址</div>
+      <div v-if="addresses.length === 0" style="color:var(--gray-500);text-align:center;padding:20px;">
+        暂无地址，请先添加收货地址
+      </div>
+      <div v-for="addr in addresses" :key="addr.id"
+           class="address-card" :class="{selected: selectedAddressId === addr.id}"
+           @click="selectedAddressId = addr.id">
+        <div>
+          <span class="name">{{ addr.contact }}</span>
+          <span class="phone">{{ addr.mobile }}</span>
+        </div>
+        <div class="addr">{{ addr.province }}{{ addr.city }}{{ addr.town }} {{ addr.street }}</div>
+      </div>
+    </div>
+
+    <!-- 订单商品 -->
+    <div class="section">
+      <div class="section-title">🎫 订单信息</div>
+      <div class="confirm-item" v-for="item in items" :key="item.id">
+        <div class="confirm-item-img">
+          <img v-if="item.image" :src="item.image" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" alt="">
+          <span v-else>{{ getEmoji(item.itemId) }}</span>
+        </div>
+        <div class="confirm-item-name">
+          {{ item.name }}
+          <div style="font-size:12px;color:var(--gray-500);">× {{ item.num }}</div>
+        </div>
+        <div class="confirm-item-price">¥{{ formatPrice(item.price * item.num) }}</div>
+      </div>
+      <div class="confirm-total">
+        合计：<strong>¥{{ formatPrice(totalPrice) }}</strong>
+      </div>
+    </div>
+
+    <!-- 支付方式 -->
+    <div class="section">
+      <div class="section-title">💳 支付方式</div>
+      <div class="pay-type-options">
+        <div class="pay-type-option" :class="{selected: payType === 3}" @click="payType = 3">
+          <div class="icon">💰</div>
+          <div class="name">余额支付</div>
+          <div style="font-size:12px;color:var(--gray-500);">余额：¥{{ formatPrice(userBalance) }}</div>
+        </div>
+        <div class="pay-type-option" style="opacity:0.5;cursor:not-allowed;">
+          <div class="icon">💚</div>
+          <div class="name">微信支付</div>
+          <div style="font-size:12px;color:var(--gray-500);">暂未开放</div>
+        </div>
+        <div class="pay-type-option" style="opacity:0.5;cursor:not-allowed;">
+          <div class="icon">💙</div>
+          <div class="name">支付宝</div>
+          <div style="font-size:12px;color:var(--gray-500);">暂未开放</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 提交 -->
+    <button class="btn btn-danger btn-lg btn-block" @click="submitOrder" :disabled="submitting || !selectedAddressId">
+      {{ submitting ? '提交中...' : '💰 提交订单（¥' + formatPrice(totalPrice) + '）' }}
+    </button>
+  </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script src="js/api.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    items: [],
+    addresses: [],
+    selectedAddressId: null,
+    payType: 3,
+    userBalance: 0,
+    submitting: false
+  },
+  created() {
+    const userInfo = util.getUserInfo();
+    if (!userInfo) { location.href = '/login.html'; return; }
+    this.userBalance = userInfo.balance || 0;
+    this.items = util.store.get('checkout-items') || [];
+    if (this.items.length === 0) {
+      util.toast('没有待结算的活动', 'warning');
+      location.href = '/cart.html';
+      return;
+    }
+    this.loadAddresses();
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    getEmoji(id) {
+      const emojis = ['🎵', '🎸', '🎹', '🎤', '🎭', '🎪', '🎬', '🎯', '🎮', '🎲'];
+      return emojis[id % emojis.length];
+    },
+    getGradient(id) {
+      const gradients = [
+        'linear-gradient(135deg, #667eea, #764ba2)',
+        'linear-gradient(135deg, #f093fb, #f5576c)',
+        'linear-gradient(135deg, #4facfe, #00f2fe)',
+        'linear-gradient(135deg, #43e97b, #38f9d7)',
+      ];
+      return gradients[id % gradients.length];
+    },
+    async loadAddresses() {
+      try {
+        const res = await axios.get('/api/addresses');
+        this.addresses = Array.isArray(res.data) ? res.data : [];
+        if (this.addresses.length > 0) {
+          this.selectedAddressId = this.addresses[0].id;
+        }
+      } catch (e) {}
+    },
+    async submitOrder() {
+      if (!this.selectedAddressId) {
+        util.toast('请选择收货地址', 'warning');
+        return;
+      }
+      this.submitting = true;
+      try {
+        const details = this.items.map(i => ({ itemId: i.itemId, num: i.num }));
+        const res = await axios.post('/api/orders', {
+          addressId: this.selectedAddressId,
+          paymentType: this.payType,
+          details: details
+        });
+        const orderId = res.data;
+        if (orderId) {
+          util.store.set('pending-order-id', orderId);
+          util.store.set('pending-order-amount', this.totalPrice);
+          util.store.del('checkout-items');
+          // 保存订单ID到历史记录
+          var orderIds = util.store.get('my-order-ids') || [];
+          if (orderIds.indexOf(orderId) === -1) {
+            orderIds.push(orderId);
+            util.store.set('my-order-ids', orderIds);
+          }
+          location.href = '/pay.html?orderId=' + orderId;
+        } else {
+          util.toast('创建订单失败', 'error');
+        }
+      } catch (e) {
+        util.toast('创建订单失败：' + (e.message || '请稍后重试'), 'error');
+      } finally {
+        this.submitting = false;
+      }
+    }
+  },
+  computed: {
+    totalPrice() {
+      return this.items.reduce((sum, i) => sum + i.price * i.num, 0);
+    }
+  }
+});
+</script>
+</body>
+</html>

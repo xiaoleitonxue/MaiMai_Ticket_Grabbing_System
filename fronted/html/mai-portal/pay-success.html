@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>支付成功 - MaiMai抢票系统</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .success-page { background: var(--gray-100); min-height: 100vh; }
+    .success-container { max-width: 500px; margin: 80px auto; padding: 0 20px; }
+    .success-card {
+      background: var(--white); border-radius: 16px; padding: 48px 32px;
+      box-shadow: var(--shadow-lg); text-align: center;
+    }
+    .success-icon {
+      width: 80px; height: 80px; margin: 0 auto 20px;
+      background: rgba(16,185,129,0.1); border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+    }
+    .success-title { font-size: 24px; font-weight: 800; color: var(--success); margin-bottom: 8px; }
+    .success-subtitle { font-size: 14px; color: var(--gray-500); margin-bottom: 24px; }
+    .success-info { text-align: left; background: var(--gray-100); border-radius: 8px; padding: 16px; margin-bottom: 24px; }
+    .success-info .row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+    .success-info .row .label { color: var(--gray-500); }
+    .success-info .row .value { color: var(--dark); font-weight: 600; }
+    .success-actions { display: flex; gap: 12px; }
+    .success-actions .btn { flex: 1; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="success-container">
+    <div class="success-card">
+      <div class="success-icon">✅</div>
+      <div class="success-title">支付成功！</div>
+      <div class="success-subtitle">恭喜你，抢票成功！</div>
+      <div class="success-info">
+        <div class="row">
+          <span class="label">订单编号</span>
+          <span class="value">{{ orderId }}</span>
+        </div>
+        <div class="row">
+          <span class="label">支付金额</span>
+          <span class="value" style="color:var(--danger);">¥{{ formatPrice(amount) }}</span>
+        </div>
+        <div class="row">
+          <span class="label">支付时间</span>
+          <span class="value">{{ formatDate(payTime) }}</span>
+        </div>
+        <div class="row">
+          <span class="label">订单状态</span>
+          <span class="value" style="color:var(--success);">已付款</span>
+        </div>
+      </div>
+      <div class="success-actions">
+        <a href="/orders.html" class="btn btn-outline">查看订单</a>
+        <a href="/index.html" class="btn btn-primary">继续抢票</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="js/axios.min.js"></script>
+<script src="js/vue.js"></script>
+<script src="js/common.js"></script>
+<script>
+new Vue({
+  el: '#app',
+  data: {
+    orderId: '',
+    amount: 0,
+    payTime: new Date().toISOString()
+  },
+  created() {
+    this.orderId = util.getUrlParam('orderId') || util.store.get('pending-order-id') || '';
+    this.amount = Number(util.getUrlParam('amount')) || 0;
+    if (!this.amount && this.orderId) {
+      this.loadOrder();
+    }
+  },
+  methods: {
+    formatPrice: util.formatPrice,
+    formatDate: util.formatDate,
+    async loadOrder() {
+      try {
+        const res = await axios.get('/api/orders/' + this.orderId);
+        const data = res.data;
+        if (data) {
+          this.amount = data.totalFee || 0;
+          this.payTime = data.payTime || new Date().toISOString();
+        }
+      } catch (e) {}
+    }
+  }
+});
+</script>
+</body>
+</html>

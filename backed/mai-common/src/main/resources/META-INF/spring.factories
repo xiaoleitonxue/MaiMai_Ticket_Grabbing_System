@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.mai.common.config.MyBatisConfig,\
+  com.mai.common.config.MvcConfig,\
+  com.mai.common.config.JsonConfig,\
+  com.mai.common.config.MqConfig,\
+  com.mai.common.config.MqConsumeErrorAutoConfiguration

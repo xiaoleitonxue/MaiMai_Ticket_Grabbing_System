@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>MaiMai抢票系统 - 订单管理</title>
+  <link href="./css/main.css" rel="stylesheet">
+  <link rel="stylesheet" href="./css/element.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 30%, #0f3460 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    }
+    #app {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 24px 32px;
+    }
+    #app h1 {
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    #app h1::before {
+      content: '📦';
+      font-size: 28px;
+    }
+    .add-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .el-table {
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .el-table th {
+      background: rgba(255,255,255,0.06) !important;
+      color: #e0e0e0 !important;
+      font-weight: 700;
+      border-color: rgba(255,255,255,0.08) !important;
+    }
+    .el-table td {
+      border-color: rgba(255,255,255,0.05) !important;
+      color: #ccc !important;
+    }
+    .el-table tr {
+      background: transparent !important;
+    }
+    .el-table tr:hover td {
+      background: rgba(108, 92, 231, 0.1) !important;
+    }
+    .el-table::before { display: none; }
+    .el-pagination {
+      padding: 16px 0 0;
+    }
+    .el-pagination button,
+    .el-pagination .el-pager li {
+      background: rgba(255,255,255,0.06) !important;
+      color: #ccc !important;
+      border-radius: 8px;
+    }
+    .el-pagination .el-pager li.active {
+      background: #6C5CE7 !important;
+      color: #fff !important;
+    }
+    .el-button--primary {
+      background: linear-gradient(135deg, #6C5CE7, #5A4BD1) !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    .el-button--danger {
+      background: linear-gradient(135deg, #FF6B6B, #EE5A5A) !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    .el-button--success {
+      background: linear-gradient(135deg, #00D2A0, #00B894) !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    .el-button--info {
+      background: linear-gradient(135deg, #636e72, #4a5568) !important;
+      border: none !important;
+      border-radius: 8px !important;
+    }
+    .el-message { border-radius: 12px; }
+    .order-detail-item {
+      display: flex; align-items: center; gap: 8px; padding: 4px 0;
+      font-size: 12px; color: #ccc;
+    }
+    .order-detail-item + .order-detail-item {
+      border-top: 1px dashed rgba(255,255,255,0.05);
+    }
+    .order-detail-item img {
+      width: 36px; height: 36px; border-radius: 6px; object-fit: cover;
+    }
+    .status-tag { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: 600; }
+    .status-1 { background: rgba(255,193,7,0.2); color: #FFC107; }
+    .status-2 { background: rgba(0,210,160,0.2); color: #00D2A0; }
+    .status-3 { background: rgba(108,92,231,0.2); color: #6C5CE7; }
+    .status-4 { background: rgba(0,210,160,0.2); color: #00D2A0; }
+    .status-5 { background: rgba(255,255,255,0.1); color: #999; }
+    .status-6 { background: rgba(0,210,160,0.2); color: #00D2A0; }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="nav-bar" style="display:flex;align-items:center;gap:24px;padding-bottom:16px;margin-bottom:24px;border-bottom:1px solid rgba(255,255,255,0.1);">
+    <a href="/index.html" style="color:rgba(255,255,255,0.5);font-size:14px;text-decoration:none;">首页</a>
+    <a href="/items.html" style="color:rgba(255,255,255,0.5);font-size:14px;text-decoration:none;">演出管理</a>
+    <a href="/orders.html" style="color:#fff;font-size:14px;text-decoration:none;font-weight:600;">订单管理</a>
+    <a href="/search.html" style="color:rgba(255,255,255,0.5);font-size:14px;text-decoration:none;">演出搜索</a>
+  </div>
+  <h1>订单管理</h1>
+  <div class="add-btn">
+    <span style="color:rgba(255,255,255,0.4);font-size:13px;">所有用户的所有订单</span>
+    <el-pagination
+        v-show="total > pageSize"
+        @current-change="query"
+        :current-page="lastPage"
+        style="margin-top: 5px"
+        background
+        :page-size="pageSize"
+        :page-sizes="pageSizes"
+        @size-change="handleSizeChange"
+        layout="prev, pager, next, total, sizes"
+        :total="total">
+    </el-pagination>
+  </div>
+  <el-table :data="orders" border style="width: 100%">
+    <el-table-column prop="id" label="订单号" width="100" align="center"></el-table-column>
+    <el-table-column prop="userId" label="用户ID" width="90" align="center"></el-table-column>
+    <el-table-column label="订单详情" min-width="260">
+      <template slot-scope="scope">
+        <div v-if="scope.row.details && scope.row.details.length > 0">
+          <div class="order-detail-item" v-for="(d, i) in scope.row.details" :key="i">
+            <img v-if="d.image" :src="d.image" alt="">
+            <span v-else style="width:36px;height:36px;border-radius:6px;background:rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;font-size:16px;">🎵</span>
+            <span>{{ d.name }} — 演出ID:{{ d.itemId }} ×{{ d.num }}</span>
+          </div>
+        </div>
+        <span v-else style="color:rgba(255,255,255,0.3);">无详情</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="totalFee" label="实付金额(分)" width="110" align="center">
+      <template slot-scope="scope">
+        ¥{{ scope.row.totalFee }}
+      </template>
+    </el-table-column>
+    <el-table-column label="支付方式" width="100" align="center">
+      <template slot-scope="scope">
+        {{ getPaymentType(scope.row.paymentType) }}
+      </template>
+    </el-table-column>
+    <el-table-column label="订单状态" width="100" align="center">
+      <template slot-scope="scope">
+        <span :class="'status-tag status-' + scope.row.status">{{ getStatusText(scope.row.status) }}</span>
+      </template>
+    </el-table-column>
+    <el-table-column prop="createTime" label="创建时间" width="170" align="center">
+      <template slot-scope="scope">
+        {{ formatTime(scope.row.createTime) }}
+      </template>
+    </el-table-column>
+    <el-table-column prop="payTime" label="支付时间" width="170" align="center">
+      <template slot-scope="scope">
+        {{ scope.row.payTime ? formatTime(scope.row.payTime) : '-' }}
+      </template>
+    </el-table-column>
+    <el-table-column prop="closeTime" label="关闭时间" width="170" align="center">
+      <template slot-scope="scope">
+        {{ scope.row.closeTime ? formatTime(scope.row.closeTime) : '-' }}
+      </template>
+    </el-table-column>
+  </el-table>
+</div>
+<script src="./js/vue.js"></script>
+<script src="./js/axios.min.js"></script>
+<script src="./js/element.js"></script>
+<script>
+  axios.defaults.baseURL = "/api";
+  axios.defaults.timeout = 5000;
+  axios.interceptors.request.use(
+    function(config) {
+      config.headers['authorization'] = 'admin';
+      return config;
+    },
+    function(error) {
+      console.log(error);
+      return Promise.reject(error);
+    }
+  );
+
+  new Vue({
+    el: "#app",
+    data: {
+      pageSize: 10,
+      pageSizes: [5, 10, 20, 50, 100],
+      orders: [],
+      total: 0,
+      lastPage: 1
+    },
+    created() {
+      this.query(1);
+    },
+    watch: {
+      pageSize() {
+        this.query(1);
+      }
+    },
+    methods: {
+      handleSizeChange: function(s) {
+        this.pageSize = s;
+      },
+      query: function(page) {
+        this.lastPage = page;
+        var self = this;
+        axios.get("/orders/page", {
+          params: {
+            pageNo: page,
+            pageSize: this.pageSize
+          }
+        })
+        .then(function(resp) {
+          self.orders = resp.data.list || [];
+          self.total = parseInt(resp.data.total) || 0;
+        })
+        .catch(function(err) {
+          console.log(err);
+          self.$message.error('加载订单失败');
+        });
+      },
+      formatTime: function(timeStr) {
+        if (!timeStr) return '-';
+        var d = new Date(timeStr);
+        var pad = function(n) { return n < 10 ? '0' + n : n; };
+        return d.getFullYear() + '-' +
+          pad(d.getMonth() + 1) + '-' +
+          pad(d.getDate()) + ' ' +
+          pad(d.getHours()) + ':' +
+          pad(d.getMinutes()) + ':' +
+          pad(d.getSeconds());
+      },
+      getStatusText: function(status) {
+        var map = { 1: '待付款', 2: '已付款', 3: '已发货', 4: '已完成', 5: '已取消', 6: '已评价' };
+        return map[status] || '未知';
+      },
+      getPaymentType: function(type) {
+        var map = { 1: '支付宝', 2: '微信', 3: '余额支付' };
+        return map[type] || '其他';
+      }
+    }
+  });
+</script>
+</body>
+</html>

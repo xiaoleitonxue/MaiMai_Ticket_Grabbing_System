@@ -1,0 +1,9 @@
+server:
+  port: 8086
+feign:
+  okhttp:
+    enabled: true
+mai:
+  swagger:
+    title: "搜索服务接口文档"
+    package: com.mai.search.controller
