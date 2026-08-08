@@ -171,21 +171,21 @@
     <!-- 筛选栏 -->
     <div class="filter-bar">
       <div style="font-weight:600;font-size:14px;color:var(--dark)">筛选：</div>
-      <select class="form-select" v-model="filterCategory" @change="search">
+      <select class="form-select" v-model="filterCategory">
         <option value="">全部分类</option>
         <option v-for="c in categories" :value="c">{{ c }}</option>
       </select>
-      <select class="form-select" v-model="filterBrand" @change="search">
+      <select class="form-select" v-model="filterBrand">
         <option value="">全部品牌</option>
         <option v-for="b in brands" :value="b">{{ b }}</option>
       </select>
-      <select class="form-select" v-model="sortBy" @change="search">
+      <select class="form-select" v-model="sortBy">
         <option value="">默认排序</option>
         <option value="price">价格排序</option>
         <option value="sold">销量排序</option>
         <option value="update_time">最新发布</option>
       </select>
-      <select class="form-select" v-model="sortAsc" @change="search" style="min-width:100px;">
+      <select class="form-select" v-model="sortAsc" style="min-width:100px;">
         <option :value="false">降序</option>
         <option :value="true">升序</option>
       </select>
@@ -353,8 +353,6 @@ new Vue({
       try {
         const query = {};
         if (this.keyword) query.key = this.keyword;
-        if (this.filterCategory) query.category = this.filterCategory;
-        if (this.filterBrand) query.brand = this.filterBrand;
         const res = await api.search.filters(query);
         const data = res.data;
         if (data) {
@@ -396,6 +394,12 @@ new Vue({
     reload() {
       location.reload();
     }
+  },
+  watch: {
+    filterCategory: 'search',
+    filterBrand: 'search',
+    sortBy: 'search',
+    sortAsc: 'search'
   },
   computed: {
     visiblePages() {

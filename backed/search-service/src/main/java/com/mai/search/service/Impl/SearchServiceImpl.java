@@ -76,13 +76,13 @@ public class SearchServiceImpl implements ISearchService {
         //品牌分类过滤
         String brand = query.getBrand();
         if(StrUtil.isNotBlank(brand)){
-            builder.filter(QueryBuilders.termQuery("brand.keyword",brand));
+            builder.filter(QueryBuilders.termQuery("brand",brand));
         }
 
         //商品分类过滤
         String category = query.getCategory();
         if(StrUtil.isNotBlank(category)){
-            builder.filter(QueryBuilders.termQuery("category.keyword",category));
+            builder.filter(QueryBuilders.termQuery("category",category));
         }
 
         //价格范围过滤
@@ -176,12 +176,12 @@ public class SearchServiceImpl implements ISearchService {
         //品牌分类过滤
         String brand = query.getBrand();
         if(StrUtil.isNotBlank(brand)){
-            builder.filter(QueryBuilders.termQuery("brand.keyword",brand));
+            builder.filter(QueryBuilders.termQuery("brand",brand));
         }
         //商品分类过滤
         String category = query.getCategory();
         if(StrUtil.isNotBlank(category)){
-            builder.filter(QueryBuilders.termQuery("category.keyword",category));
+            builder.filter(QueryBuilders.termQuery("category",category));
         }
 
         String brandAgg = "brandAgg";
@@ -189,8 +189,8 @@ public class SearchServiceImpl implements ISearchService {
         //聚合查询品牌以及分类
         request.source().size(0)
                 .query(builder)
-                .aggregation(AggregationBuilders.terms(brandAgg).field("brand.keyword"))
-                .aggregation(AggregationBuilders.terms(categoryAgg).field("category.keyword"));
+                .aggregation(AggregationBuilders.terms(brandAgg).field("brand"))
+                .aggregation(AggregationBuilders.terms(categoryAgg).field("category"));
 
         //解析数据
         List<String> brands = new ArrayList<>();
